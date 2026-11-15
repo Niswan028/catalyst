@@ -36,7 +36,7 @@ describe('Live Supabase Project Verification', () => {
 
     expect(error).toBeNull();
     expect(data).toBeDefined();
-  });
+  }, 15000);
 
   it('verifies all required tables exist in the public schema', async () => {
     if (!isConfigured) return;
