@@ -64,22 +64,42 @@ export async function GET(request: NextRequest) {
       .select('*, elderly_user:users!caregiver_links_elderly_user_id_fkey(id, email, full_name, role, created_at)')
       .eq('caregiver_id', user.id);
 
-    const formattedCircleLinks = (circleMemberships || [])
-      .filter((m: any) => m.circle && m.circle.elder)
-      .map((m: any) => ({
+    interface CircleMembershipItem {
+      id: string;
+      role: string;
+      permissions: Record<string, boolean>;
+      created_at: string;
+      circle: {
+        id: string;
+        name: string;
+        elder_id: string;
+        elder: {
+          id: string;
+          email: string;
+          full_name: string | null;
+          role: string;
+          created_at: string;
+        };
+      } | null;
+    }
+
+    const memberships = (circleMemberships || []) as unknown as CircleMembershipItem[];
+    const formattedCircleLinks = memberships
+      .filter((m) => m.circle && m.circle.elder)
+      .map((m) => ({
         id: m.id,
         caregiver_id: user.id,
-        elderly_user_id: m.circle.elder.id,
-        elderly_user: m.circle.elder,
+        elderly_user_id: m.circle!.elder.id,
+        elderly_user: m.circle!.elder,
         role: m.role,
         permissions: m.permissions,
-        circle_id: m.circle.id,
-        circle_name: m.circle.name,
+        circle_id: m.circle!.id,
+        circle_name: m.circle!.name,
         created_at: m.created_at,
       }));
 
     // Merge without duplicates
-    const seenElderIds = new Set(formattedCircleLinks.map((l: any) => l.elderly_user_id));
+    const seenElderIds = new Set(formattedCircleLinks.map((l) => l.elderly_user_id));
     const mergedLinks = [...formattedCircleLinks];
 
     if (legacyLinks) {

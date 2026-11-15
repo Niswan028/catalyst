@@ -14,6 +14,7 @@ import { getErrorMessage } from '@/lib/errors';
 import MedicationCard from '@/components/medications/MedicationCard';
 import MedicationAddForm, { MedicationFormData } from '@/components/medications/MedicationAddForm';
 import MedicationEditModal from '@/components/medications/MedicationEditModal';
+import { isClinicianUser, canEditMedications } from '@/lib/permissions';
 
 const INITIAL_FORM: MedicationFormData = {
   name: '',
@@ -27,6 +28,7 @@ export default function MedicationsPage() {
   const router = useRouter();
   const [medications, setMedications] = useState<Medication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [canEdit, setCanEdit] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
   const [formData, setFormData] = useState<MedicationFormData>(INITIAL_FORM);
@@ -34,6 +36,9 @@ export default function MedicationsPage() {
   const [success, setSuccess] = useState('');
 
   const fetchMedications = useCallback(async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -45,6 +50,7 @@ export default function MedicationsPage() {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
+        signal: controller.signal,
       });
       const data = await response.json();
       if (response.ok) {
@@ -53,6 +59,7 @@ export default function MedicationsPage() {
     } catch (err) {
       logger.error('Error fetching medications', { error: err });
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   }, [router]);
@@ -64,6 +71,12 @@ export default function MedicationsPage() {
         router.push('/auth/signin');
         return;
       }
+      const isDoctor = isClinicianUser({
+        email: user.email,
+        full_name: user.user_metadata?.full_name,
+        role: user.user_metadata?.role,
+      });
+      setCanEdit(!isDoctor && canEditMedications(user.user_metadata?.role, isDoctor));
       fetchMedications();
       requestNotificationPermission();
     };
@@ -213,8 +226,12 @@ export default function MedicationsPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <LoadingSpinner size="lg" />
+      <div className="max-w-4xl mx-auto space-y-8 pb-16 animate-pulse">
+        <div className="h-20 bg-stone-100 dark:bg-stone-800 rounded-2xl" />
+        <div className="space-y-4">
+          <div className="h-32 bg-stone-100 dark:bg-stone-800 rounded-2xl" />
+          <div className="h-32 bg-stone-100 dark:bg-stone-800 rounded-2xl" />
+        </div>
       </div>
     );
   }
@@ -234,14 +251,22 @@ export default function MedicationsPage() {
             Manage daily schedules, stock refill thresholds, dose tracking, and caregiver alerts.
           </p>
         </div>
-        <Button onClick={() => setShowAddForm(!showAddForm)} className="shrink-0 font-bold">
-          {showAddForm ? '✕ Close Form' : '+ Add Medication'}
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setShowAddForm(!showAddForm)} className="shrink-0 font-bold">
+            {showAddForm ? '✕ Close Form' : '+ Add Medication'}
+          </Button>
+        )}
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          {error}
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded flex items-center justify-between">
+          <span>{error}</span>
+          <button
+            onClick={fetchMedications}
+            className="text-xs font-bold underline hover:text-red-900"
+          >
+            Retry
+          </button>
         </div>
       )}
 
@@ -251,7 +276,7 @@ export default function MedicationsPage() {
         </div>
       )}
 
-      {showAddForm && (
+      {showAddForm && canEdit && (
         <MedicationAddForm
           formData={formData}
           setFormData={setFormData}
@@ -265,7 +290,9 @@ export default function MedicationsPage() {
           <div className="text-center py-8">
             <div className="text-6xl mb-4">💊</div>
             <p className="text-gray-600 mb-4">No medications added yet.</p>
-            <Button onClick={() => setShowAddForm(true)}>Add Your First Medication</Button>
+            {canEdit && (
+              <Button onClick={() => setShowAddForm(true)}>Add Your First Medication</Button>
+            )}
           </div>
         </Card>
       ) : (
@@ -274,6 +301,7 @@ export default function MedicationsPage() {
             <MedicationCard
               key={med.id}
               medication={med}
+              canEdit={canEdit}
               onLog={handleLogMedication}
               onEdit={(m) => setEditingMedication(m)}
               onDelete={handleDeleteMedication}

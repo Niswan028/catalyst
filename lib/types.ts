@@ -102,7 +102,7 @@ export interface LinkedUser extends User {
 // FAMILY CARE CIRCLE & PERMISSIONS TYPES
 // ====================================================
 
-export type CircleRole = 'owner' | 'elder' | 'editor' | 'viewer';
+export type CircleRole = 'owner' | 'elder' | 'editor' | 'viewer' | 'clinician';
 export type CircleMemberStatus = 'pending' | 'approved' | 'active' | 'revoked' | 'declined';
 
 export interface CircleMemberPermissions {

@@ -18,6 +18,7 @@ export default function NextDoseCard({
   onTakeDose,
 }: NextDoseCardProps) {
   let countdownText = '';
+  let isOverdue = false;
   if (upcomingMed && !isTaken) {
     const now = new Date();
     const [h, min] = upcomingMed.time.split(':').map(Number);
@@ -32,8 +33,9 @@ export default function NextDoseCard({
       } else {
         countdownText = `⏰ Due in ${diffMins} minutes`;
       }
-    } else if (diffMins < 0 && Math.abs(diffMins) <= 60) {
-      countdownText = `⚠️ Due ${Math.abs(diffMins)}m ago`;
+    } else if (diffMins < 0) {
+      isOverdue = true;
+      countdownText = `⚠️ Overdue by ${Math.abs(diffMins)}m`;
     } else {
       countdownText = `⏰ Scheduled for ${upcomingMed.time}`;
     }
@@ -47,8 +49,8 @@ export default function NextDoseCard({
             Next Due Medication
           </span>
           {upcomingMed && (
-            <Badge variant={isTaken ? 'success' : 'warning'} dot>
-              {isTaken ? 'Confirmed Taken' : 'Upcoming'}
+            <Badge variant={isTaken ? 'success' : isOverdue ? 'danger' : 'warning'} dot>
+              {isTaken ? 'Confirmed Taken' : isOverdue ? 'Overdue' : 'Upcoming'}
             </Badge>
           )}
         </div>

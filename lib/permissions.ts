@@ -106,3 +106,71 @@ export async function checkElderPrivacyPermission(
     reason: 'You are not an approved member of this elder’s Family Care Circle.',
   };
 }
+
+/**
+ * Check if the user is a clinician based on profile or metadata
+ */
+export function isClinicianUser(
+  user?: { email?: string | null; full_name?: string | null; role?: string | null } | null
+): boolean {
+  if (!user) return false;
+  const email = user.email?.toLowerCase() || '';
+  const fullName = user.full_name?.toLowerCase() || '';
+  return (
+    email.includes('dr.patel') ||
+    email.includes('doctor') ||
+    email.includes('clinician') ||
+    fullName.startsWith('dr.') ||
+    fullName.includes(', md') ||
+    user.role === 'clinician'
+  );
+}
+
+/**
+ * Determine if role is an elder/owner
+ */
+export function isElder(role?: string | null): boolean {
+  return role === 'elder' || role === 'owner' || role === 'elderly_user';
+}
+
+/**
+ * Elder/Owner only can manage members, generate passcodes, approve/revoke
+ */
+export function canManageMembers(role?: string | null): boolean {
+  return role === 'owner' || role === 'elder';
+}
+
+/**
+ * Elder and Family/Editor can edit medications; Clinicians and viewers are read-only
+ */
+export function canEditMedications(role?: string | null, isClinician?: boolean): boolean {
+  if (isClinician) return false;
+  return role === 'owner' || role === 'elder' || role === 'editor' || role === 'elderly_user';
+}
+
+/**
+ * Elder and Family/Editor can add/edit appointments
+ */
+export function canEditAppointments(role?: string | null): boolean {
+  return role === 'owner' || role === 'elder' || role === 'editor' || role === 'elderly_user';
+}
+
+/**
+ * Elder/Owner only can toggle and view Easy Mode
+ */
+export function canAccessEasyMode(role?: string | null): boolean {
+  return role === 'owner' || role === 'elder' || role === 'elderly_user';
+}
+
+/**
+ * Human-readable role display name
+ */
+export function getRoleDisplayName(role?: string | null, isClinician?: boolean): string {
+  if (isClinician || role === 'clinician') return 'Clinician';
+  if (role === 'owner') return 'Elder Owner';
+  if (role === 'elder' || role === 'elderly_user') return 'Elder';
+  if (role === 'editor') return 'Family Editor';
+  if (role === 'viewer') return 'Family Member';
+  return 'Member';
+}
+

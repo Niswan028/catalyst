@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import Card from '@/components/Card';
 import { formatDate } from '@/lib/date';
 import UpcomingAppointmentsWidget from '@/components/UpcomingAppointmentsWidget';
@@ -13,6 +14,28 @@ interface CaregiverOverviewTabProps {
 export function CaregiverOverviewTab({ userSummaries }: CaregiverOverviewTabProps) {
   return (
     <div className="space-y-6">
+      {/* Clinical Brief Callout */}
+      <div className="bg-[#f5f2eb] dark:bg-stone-900 border border-[#e2d9cc] dark:border-stone-800 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs">
+        <div>
+          <span className="text-[10px] uppercase font-bold tracking-widest text-primary-800 dark:text-primary-300 block mb-1">
+            Clinical Visit Preparation
+          </span>
+          <h3 className="font-serif text-lg font-bold text-stone-900 dark:text-stone-100">
+            One-Page Doctor Visit Brief
+          </h3>
+          <p className="text-xs text-stone-600 dark:text-stone-300 mt-0.5">
+            Synchronized 7-day adherence, active prescriptions, stock levels, and visit discussion questions.
+          </p>
+        </div>
+        <Link
+          href="/doctor-brief"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900 text-xs font-bold rounded-xl shadow-xs transition shrink-0"
+        >
+          <span>Open Doctor Brief</span>
+          <span>→</span>
+        </Link>
+      </div>
+
       <Card title="Recent Health Summaries">
         {userSummaries.length === 0 ? (
           <p className="text-gray-600">

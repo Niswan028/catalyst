@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedContext, createServiceRoleClient } from '@/lib/supabase/authServer';
 import { createMedicationSchema, updateMedicationSchema } from '@/lib/validations/medications';
-import { checkElderPrivacyPermission } from '@/lib/permissions';
+import { checkElderPrivacyPermission, isClinicianUser } from '@/lib/permissions';
 import { logAuditEvent } from '@/lib/audit';
 
 export async function POST(request: NextRequest) {
@@ -20,6 +20,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: validated.error.issues?.[0]?.message || 'Invalid medication details' },
         { status: 400 }
+      );
+    }
+
+    if (isClinicianUser(user)) {
+      return NextResponse.json(
+        { error: 'Clinicians have read-only clinical oversight and cannot add prescriptions directly' },
+        { status: 403 }
       );
     }
 
@@ -149,6 +156,13 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
+    if (isClinicianUser(user)) {
+      return NextResponse.json(
+        { error: 'Clinicians have read-only clinical oversight and cannot modify prescriptions directly' },
+        { status: 403 }
+      );
+    }
+
     const { id, ...updates } = validated.data;
 
     // Fetch existing medication
@@ -225,6 +239,13 @@ export async function DELETE(request: NextRequest) {
     }
     const { user } = authResult;
     const adminSupabase = createServiceRoleClient();
+
+    if (isClinicianUser(user)) {
+      return NextResponse.json(
+        { error: 'Clinicians have read-only clinical oversight and cannot delete prescriptions directly' },
+        { status: 403 }
+      );
+    }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

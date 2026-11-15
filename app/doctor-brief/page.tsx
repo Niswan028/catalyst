@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import { Icons } from '@/components/ui';
+import RoleBadge from '@/components/RoleBadge';
+import { isClinicianUser, isElder } from '@/lib/permissions';
 
 interface MedicationItem {
   id: string;
@@ -79,6 +81,9 @@ const DEFAULT_APPOINTMENTS: AppointmentItem[] = [
 
 export default function DoctorBriefPage() {
   const [elderName, setElderName] = useState('Eleanor Vance');
+  const [viewerName, setViewerName] = useState<string | null>(null);
+  const [viewerRole, setViewerRole] = useState<'elder' | 'editor' | 'clinician' | 'viewer'>('elder');
+  const [isClinician, setIsClinician] = useState<boolean>(false);
   const [medications, setMedications] = useState<MedicationItem[]>(DEFAULT_MEDICATIONS);
   const [appointments, setAppointments] = useState<AppointmentItem[]>(DEFAULT_APPOINTMENTS);
   const [questions, setQuestions] = useState(
@@ -103,14 +108,48 @@ export default function DoctorBriefPage() {
         } = await supabase.auth.getSession();
         if (!session?.user) return;
 
-        if (session.user.user_metadata?.full_name) {
-          setElderName(session.user.user_metadata.full_name);
+        const currentName = session.user.user_metadata?.full_name || session.user.email || '';
+        const userIsClinician = isClinicianUser({
+          email: session.user.email,
+          full_name: currentName,
+          role: session.user.user_metadata?.role,
+        });
+        const userRoleMeta = session.user.user_metadata?.role;
+        const userIsElder = !userIsClinician && isElder(userRoleMeta);
+
+        setIsClinician(userIsClinician);
+
+        let targetElderId = session.user.id;
+
+        if (userIsClinician || userRoleMeta === 'caregiver') {
+          // Monitored elder is Eleanor Vance; viewer is doctor or family member
+          setViewerName(currentName);
+          setViewerRole(userIsClinician ? 'clinician' : 'editor');
+          setElderName('Eleanor Vance');
+
+          // Look for linked elder ID from circle_members
+          const { data: circleMember } = await supabase
+            .from('circle_members')
+            .select('circle:care_circles(elder_id)')
+            .eq('user_id', session.user.id)
+            .limit(1)
+            .maybeSingle();
+
+          const foundElderId = (circleMember?.circle as { elder_id?: string } | null)?.elder_id;
+          if (foundElderId) {
+            targetElderId = foundElderId;
+          }
+        } else {
+          // Elder viewing their own brief
+          setElderName(currentName || 'Eleanor Vance');
+          setViewerName(null);
+          setViewerRole('elder');
         }
 
         const { data: meds } = await supabase
           .from('medications')
           .select('id, name, dosage, time, instructions, total_stock')
-          .eq('user_id', session.user.id)
+          .eq('user_id', targetElderId)
           .eq('is_active', true)
           .order('time', { ascending: true });
 
@@ -121,7 +160,7 @@ export default function DoctorBriefPage() {
         const { data: apts } = await supabase
           .from('appointments')
           .select('id, doctor_name, specialty, location, appointment_date, status')
-          .eq('user_id', session.user.id)
+          .eq('user_id', targetElderId)
           .gte('appointment_date', new Date().toISOString())
           .order('appointment_date', { ascending: true })
           .limit(5);
@@ -162,8 +201,11 @@ export default function DoctorBriefPage() {
       {/* Top Breadcrumb & Status Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs border-b border-[#e6dfd3] dark:border-stone-800 pb-3 no-print">
         <div className="flex items-center gap-2 font-mono uppercase tracking-widest text-stone-600 dark:text-stone-400 font-bold">
-          <Link href="/dashboard" className="hover:text-stone-900 dark:hover:text-stone-100 transition">
-            CareConnect
+          <Link
+            href={viewerRole === 'elder' ? '/dashboard' : '/caregiver'}
+            className="hover:text-stone-900 dark:hover:text-stone-100 transition"
+          >
+            {viewerRole === 'elder' ? 'Dashboard' : 'Care Circle Hub'}
           </Link>
           <span>/</span>
           <span className="text-stone-900 dark:text-stone-100 font-extrabold">Doctor Brief</span>
@@ -217,15 +259,30 @@ export default function DoctorBriefPage() {
           <p className="text-sm text-stone-600 dark:text-stone-300 mt-2">
             A one-page clinical summary prepared from your circle&apos;s real-time records.
           </p>
-          <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
-            Prepared for <strong className="text-stone-900 dark:text-stone-100">{elderName}</strong> ·{' '}
-            {new Date().toLocaleDateString('en-US', {
-              day: 'numeric',
-              month: 'short',
-              year: 'numeric',
-            })}
-            , {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-          </p>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            <span className="text-xs text-stone-600 dark:text-stone-300">
+              Patient: <strong className="text-stone-900 dark:text-stone-100 font-bold">{elderName}</strong>
+            </span>
+            <RoleBadge role="elder" size="xs" />
+            {viewerName && (
+              <>
+                <span className="text-stone-400">·</span>
+                <span className="text-xs text-stone-600 dark:text-stone-300">
+                  Reviewed by: <strong className="text-stone-900 dark:text-stone-100 font-bold">{viewerName}</strong>
+                </span>
+                <RoleBadge role={viewerRole} isClinician={isClinician} size="xs" />
+              </>
+            )}
+            <span className="text-stone-400">·</span>
+            <span className="text-xs text-stone-500 dark:text-stone-400">
+              {new Date().toLocaleDateString('en-US', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+              })}
+              , {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+            </span>
+          </div>
         </div>
 
         <div className="flex items-center gap-3 no-print">

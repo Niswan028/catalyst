@@ -184,7 +184,17 @@ export default function CaregiverDashboard() {
                     </h2>
                     <p className="text-gray-600 text-sm">{selectedUser.elderly_user.email}</p>
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button
+                      onClick={() =>
+                        router.push(`/doctor-brief?elder=${selectedUser.elderly_user.id}`)
+                      }
+                      variant="secondary"
+                      size="sm"
+                      className="border-primary-300 text-primary-800 hover:bg-primary-50 dark:border-primary-800 dark:text-primary-300 font-semibold"
+                    >
+                      📋 Doctor Visit Brief →
+                    </Button>
                     <Button
                       onClick={() =>
                         router.push(`/messages?user=${selectedUser.elderly_user.id}`)

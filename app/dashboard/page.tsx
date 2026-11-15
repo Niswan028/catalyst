@@ -47,8 +47,20 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <LoadingSpinner size="lg" />
+      <div className="max-w-7xl mx-auto space-y-8 animate-pulse">
+        {/* Skeleton Hero Banner */}
+        <div className="h-44 rounded-3xl bg-stone-200/60 dark:bg-stone-800/60"></div>
+        {/* Skeleton Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            <div className="h-40 rounded-2xl bg-stone-200/60 dark:bg-stone-800/60"></div>
+            <div className="h-60 rounded-2xl bg-stone-200/60 dark:bg-stone-800/60"></div>
+          </div>
+          <div className="space-y-6">
+            <div className="h-40 rounded-2xl bg-stone-200/60 dark:bg-stone-800/60"></div>
+            <div className="h-40 rounded-2xl bg-stone-200/60 dark:bg-stone-800/60"></div>
+          </div>
+        </div>
       </div>
     );
   }

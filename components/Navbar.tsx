@@ -8,6 +8,8 @@ import { User } from '@/lib/types';
 import { SupportedLanguage, getTranslation } from '@/lib/i18n';
 import Avatar from './ui/Avatar';
 import { Icons } from './ui/icons';
+import RoleBadge from './RoleBadge';
+import { isClinicianUser } from '@/lib/permissions';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -100,9 +102,11 @@ export default function Navbar() {
           { href: '/settings', label: t.nav.settings, icon: Icons.Settings },
         ];
 
-  // Split links: Top 4 primary links visible on desktop header; remainder accessible via clean "More ▾" dropdown
-  const primaryNavLinks = navLinks.slice(0, 4);
-  const secondaryNavLinks = navLinks.slice(4);
+  const isClinician = isClinicianUser(activeUser);
+
+  // Split links: Top 3 primary links visible on desktop header; remainder accessible via clean "More ▾" dropdown
+  const primaryNavLinks = navLinks.slice(0, 3);
+  const secondaryNavLinks = navLinks.slice(3);
 
   // Mobile bottom dock primary links (4 items to prevent label truncations at 360px)
   const mobileDockLinks = navLinks.slice(0, 4);
@@ -111,7 +115,7 @@ export default function Navbar() {
     <>
       {/* Responsive Header with warm paper aesthetic */}
       <header className="sticky top-0 z-40 bg-[#fbf9f5]/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-[#e6dfd3] dark:border-stone-800 shadow-xs">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
           <div className="flex items-center justify-between h-16 gap-2">
             {/* Brand Logo & Circle Context */}
             <div className="flex items-center gap-3 lg:gap-5 shrink-0">
@@ -228,12 +232,19 @@ export default function Navbar() {
                   status="online"
                 />
                 <div className="text-left hidden md:block">
-                  <p className="text-xs font-bold text-stone-800 dark:text-stone-200 leading-tight truncate max-w-[100px]">
+                  <p
+                    className="text-xs font-bold text-stone-800 dark:text-stone-200 leading-tight max-w-[120px] truncate"
+                    title={activeUser.full_name || activeUser.email}
+                  >
                     {activeUser.full_name || activeUser.email}
                   </p>
-                  <span className="text-[10px] font-semibold text-primary-800 bg-primary-100 dark:bg-primary-950 dark:text-primary-300 px-1.5 py-0.5 rounded">
-                    {activeUser.role === 'elderly_user' ? 'Elder' : 'Caregiver'}
-                  </span>
+                  <div className="mt-0.5">
+                    <RoleBadge
+                      role={activeUser.role}
+                      isClinician={isClinician}
+                      size="xs"
+                    />
+                  </div>
                 </div>
               </div>
 

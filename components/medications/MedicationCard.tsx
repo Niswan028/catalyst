@@ -6,6 +6,7 @@ import { Medication, DoseStatus } from '@/lib/types';
 
 interface MedicationCardProps {
   medication: Medication;
+  canEdit?: boolean;
   onLog: (medicationId: string, status: 'taken' | 'skipped' | 'missed') => void;
   onEdit: (med: Medication) => void;
   onDelete: (medicationId: string) => void;
@@ -13,6 +14,7 @@ interface MedicationCardProps {
 
 export default function MedicationCard({
   medication: med,
+  canEdit = true,
   onLog,
   onEdit,
   onDelete,
@@ -116,53 +118,61 @@ export default function MedicationCard({
         </div>
 
         {/* Action Controls */}
-        <div className="flex flex-row md:flex-col gap-2 flex-wrap sm:flex-nowrap pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
-          <div className="flex gap-2">
-            <Button
-              onClick={() => onLog(med.id, 'taken')}
-              variant="success"
-              size="sm"
-              className="flex-1 font-bold"
-              aria-label={`Log dose of ${med.name} as taken`}
-            >
-              ✓ Taken
-            </Button>
-            <Button
-              onClick={() => onLog(med.id, 'skipped')}
-              variant="secondary"
-              size="sm"
-              className="flex-1 font-medium"
-              aria-label={`Skip dose of ${med.name}`}
-            >
-              Skip
-            </Button>
-            <button
-              type="button"
-              onClick={() => onLog(med.id, 'missed')}
-              className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition"
-              aria-label={`Mark dose of ${med.name} as missed`}
-            >
-              Missed
-            </button>
-          </div>
+        {canEdit ? (
+          <div className="flex flex-row md:flex-col gap-2 flex-wrap sm:flex-nowrap pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+            <div className="flex gap-2">
+              <Button
+                onClick={() => onLog(med.id, 'taken')}
+                variant="success"
+                size="sm"
+                className="flex-1 font-bold"
+                aria-label={`Log dose of ${med.name} as taken`}
+              >
+                ✓ Taken
+              </Button>
+              <Button
+                onClick={() => onLog(med.id, 'skipped')}
+                variant="secondary"
+                size="sm"
+                className="flex-1 font-medium"
+                aria-label={`Skip dose of ${med.name}`}
+              >
+                Skip
+              </Button>
+              <button
+                type="button"
+                onClick={() => onLog(med.id, 'missed')}
+                className="px-2.5 py-1.5 text-xs font-semibold rounded-lg bg-amber-50 text-amber-800 border border-amber-300 hover:bg-amber-100 transition"
+                aria-label={`Mark dose of ${med.name} as missed`}
+              >
+                Missed
+              </button>
+            </div>
 
-          <div className="flex gap-2 w-full justify-end">
-            <button
-              type="button"
-              onClick={() => onEdit(med)}
-              className="text-xs text-slate-600 hover:text-primary-600 font-semibold px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-            >
-              ✏️ Edit
-            </button>
-            <button
-              type="button"
-              onClick={() => onDelete(med.id)}
-              className="text-xs text-rose-600 hover:text-rose-800 font-semibold px-2 py-1 rounded hover:bg-rose-50 transition"
-            >
-              🗑️ Delete
-            </button>
+            <div className="flex gap-2 w-full justify-end">
+              <button
+                type="button"
+                onClick={() => onEdit(med)}
+                className="text-xs text-slate-600 hover:text-primary-600 font-semibold px-2 py-1 rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                ✏️ Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => onDelete(med.id)}
+                className="text-xs text-rose-600 hover:text-rose-800 font-semibold px-2 py-1 rounded hover:bg-rose-50 transition"
+              >
+                🗑️ Delete
+              </button>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex items-center self-start sm:self-center pt-2 md:pt-0">
+            <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-purple-50 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+              🩺 Read-Only Oversight
+            </span>
+          </div>
+        )}
       </div>
     </Card>
   );

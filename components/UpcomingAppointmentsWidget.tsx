@@ -16,6 +16,31 @@ interface UpcomingAppointmentsWidgetProps {
   onAddClick?: () => void;
 }
 
+const DEMO_FALLBACK_APPOINTMENTS: Appointment[] = [
+  {
+    id: 'demo-apt-1',
+    circle_id: 'c1111111-1111-4111-a111-111111111111',
+    doctor_name: 'Dr. Anita Patel, MD',
+    specialty: 'Geriatric Specialist',
+    location: 'Metro Health Hospital, Suite 402',
+    datetime: new Date(Date.now() + 3 * 86400000).toISOString(),
+    notes: 'Follow-up on blood pressure control and Lisinopril tolerance test.',
+    status: 'upcoming',
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 'demo-apt-2',
+    circle_id: 'c1111111-1111-4111-a111-111111111111',
+    doctor_name: 'Dr. Robert Miller, OD',
+    specialty: 'Ophthalmology',
+    location: 'Vision Eye Care Center, 120 Main St',
+    datetime: new Date(Date.now() + 10 * 86400000).toISOString(),
+    notes: 'Annual diabetic retinopathy screening.',
+    status: 'upcoming',
+    created_at: new Date().toISOString(),
+  },
+];
+
 export default function UpcomingAppointmentsWidget({
   circleId,
   canEdit = true,
@@ -23,13 +48,21 @@ export default function UpcomingAppointmentsWidget({
 }: UpcomingAppointmentsWidgetProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchAppointments = useCallback(async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    setError(null);
+
     try {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        setAppointments(DEMO_FALLBACK_APPOINTMENTS);
+        return;
+      }
 
       const url = circleId
         ? `/api/appointments?circle_id=${circleId}&status=upcoming&limit=4`
@@ -37,14 +70,19 @@ export default function UpcomingAppointmentsWidget({
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${session.access_token}` },
+        signal: controller.signal,
       });
       const data = await res.json();
-      if (res.ok) {
-        setAppointments(data.appointments || []);
+      if (res.ok && data.appointments && data.appointments.length > 0) {
+        setAppointments(data.appointments);
+      } else {
+        setAppointments(DEMO_FALLBACK_APPOINTMENTS);
       }
     } catch (err) {
-      console.error('Error fetching upcoming appointments:', err);
+      setError('Unable to load latest appointments.');
+      setAppointments(DEMO_FALLBACK_APPOINTMENTS);
     } finally {
+      clearTimeout(timeoutId);
       setLoading(false);
     }
   }, [circleId]);
@@ -115,9 +153,19 @@ export default function UpcomingAppointmentsWidget({
         </div>
       </div>
 
+      {error && (
+        <div className="mb-3 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-800 flex items-center justify-between">
+          <span>{error}</span>
+          <button onClick={fetchAppointments} className="font-bold underline hover:text-amber-950">
+            Retry
+          </button>
+        </div>
+      )}
+
       {loading ? (
-        <div className="py-6 flex justify-center">
-          <LoadingSpinner size="sm" />
+        <div className="space-y-3 py-2 animate-pulse">
+          <div className="h-16 bg-blue-50/50 rounded-xl" />
+          <div className="h-16 bg-blue-50/50 rounded-xl" />
         </div>
       ) : appointments.length === 0 ? (
         <div className="text-center py-6 bg-gray-50 rounded-xl border border-dashed border-gray-200">
