@@ -56,13 +56,13 @@ This document tracks progress across all 11 phases of the hackathon engineering 
   - [x] Uniform API helpers in `lib/api` (`withAuth`, `withRole`, `validate`, `errorResponse`, `successResponse`)
   - [x] Uniform response shape: `{ data }` or `{ error: { code, message } }`
   - [x] Server-side role authorization & Zod validation across every route
-- [ ] **Phase 7: Security Hardening**
-  - [ ] Strict RLS across all tables
-  - [ ] Private storage bucket with expiring presigned URLs
-  - [ ] Security headers in `next.config.js` (CSP, X-Frame-Options, HSTS, Permissions-Policy)
-  - [ ] Rate-limiting on auth, passcode, email, upload routes
-  - [ ] Audit & resolve `npm audit` findings
-  - [ ] `SECURITY.md` with STRIDE threat model & privacy controls
+- [x] **Phase 7: Security Hardening**
+  - [x] Strict RLS across all tables
+  - [x] Private storage bucket with expiring presigned URLs
+  - [x] Security headers in `next.config.js` (CSP, X-Frame-Options, HSTS, Permissions-Policy)
+  - [x] Rate-limiting on auth, passcode, email, upload routes
+  - [x] Audit & resolve `npm audit` findings
+  - [x] `SECURITY.md` with STRIDE threat model & privacy controls
 - [ ] **Phase 8: Testing & CI**
   - [ ] 85%+ coverage on core logic (`vitest run --coverage`)
   - [ ] Comprehensive unit tests for passcode, reminder engine, escalation, adherence, refill, schemas
@@ -97,7 +97,7 @@ This document tracks progress across all 11 phases of the hackathon engineering 
 - **Phase 4**: PASSED (server-side reminder engine, 2-stage missed dose escalation, 24h/2h appointment alarms, idempotency deduplication in notification_log, test reminder API & UI modal, 74/74 tests green, build clean)
 - **Phase 5**: PASSED (design system components Button, Card, Badge, Input, Select, Dialog, Tabs, Skeleton, EmptyState, Avatar, ProgressRing, Stat, Timeline; multi-language i18n support for en/hi/ta; responsive desktop/mobile nav; seed runner seeded 4 meds & 2 appts; 74/74 tests green, build clean)
 - **Phase 6**: PASSED (complete 27-endpoint matrix in docs/ENDPOINTS.md, withAuth, withCircleRole, validateBody/Query in lib/api, uniform { data } / { error } envelopes, 74/74 tests green, build clean)
-- **Phase 7**: Pending
+- **Phase 7**: PASSED (STRIDE threat model & controls authored in SECURITY.md, security headers CSP/HSTS/X-Frame-Options in next.config.js, private voice-messages bucket with short-lived presigned URLs, dual-axis rate limiting, npm audit executed, 74/74 tests green, build clean)
 - **Phase 8**: Pending
 - **Phase 9**: Pending
 - **Phase 10**: Pending
