@@ -17,7 +17,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const ip =
-      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       request.headers.get('x-real-ip') ||
       'unknown-ip';
     const rateLimitKey = `auth_signup:${ip}`;

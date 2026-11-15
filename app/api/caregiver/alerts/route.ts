@@ -171,7 +171,9 @@ export async function GET(request: NextRequest) {
     // Sort by severity (critical > high > medium > warning) and date
     const severityOrder: Record<string, number> = { critical: 0, high: 1, medium: 2, warning: 3 };
     alerts.sort((a, b) => {
-      const severityDiff = severityOrder[a.severity] - severityOrder[b.severity];
+      const aSev = severityOrder[a.severity] ?? 99;
+      const bSev = severityOrder[b.severity] ?? 99;
+      const severityDiff = aSev - bSev;
       if (severityDiff !== 0) return severityDiff;
       return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
     });

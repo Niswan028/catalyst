@@ -64,8 +64,8 @@ describe('Medication Refill Predictions', () => {
     ];
 
     const predictions = predictAllRefills(meds);
-    expect(predictions[0].medicationName).toBe('M2'); // 3 days remaining
-    expect(predictions[1].medicationName).toBe('M3'); // 14 days
-    expect(predictions[2].medicationName).toBe('M1'); // 45 days
+    expect(predictions[0]?.medicationName).toBe('M2'); // 3 days remaining
+    expect(predictions[1]?.medicationName).toBe('M3'); // 14 days
+    expect(predictions[2]?.medicationName).toBe('M1'); // 45 days
   });
 });

@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
 
     // Determine client identifier for rate-limiting
     const ip =
-      request.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       request.headers.get('x-real-ip') ||
       'unknown-ip';
     const rateLimitKey = `passcode:${user.id}:${ip}`;

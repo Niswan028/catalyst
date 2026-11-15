@@ -48,21 +48,26 @@ export default function EasyModeView({
 
       // Find first medication whose time is >= current time, or wrap around
       const sorted = [...medications].sort((a, b) => {
-        const [aH, aM] = a.time.split(':').map(Number);
-        const [bH, bM] = b.time.split(':').map(Number);
-        return aH * 60 + aM - (bH * 60 + bM);
+        const aParts = a.time.split(':').map(Number);
+        const bParts = b.time.split(':').map(Number);
+        const aTotal = (aParts[0] ?? 0) * 60 + (aParts[1] ?? 0);
+        const bTotal = (bParts[0] ?? 0) * 60 + (bParts[1] ?? 0);
+        return aTotal - bTotal;
       });
 
       const upcoming = sorted.find((m) => {
-        const [h, min] = m.time.split(':').map(Number);
-        return h * 60 + min >= nowTotal - 30; // Within 30 min past or upcoming
+        const parts = m.time.split(':').map(Number);
+        const total = (parts[0] ?? 0) * 60 + (parts[1] ?? 0);
+        return total >= nowTotal - 30; // Within 30 min past or upcoming
       });
 
-      const nextMed = upcoming || sorted[0];
+      const nextMed = upcoming || sorted[0] || null;
       setActiveMedication(nextMed);
 
       // Play voice announcement if available
-      speakPrompt(nextMed);
+      if (nextMed) {
+        speakPrompt(nextMed);
+      }
     }
   }, [medications, speakPrompt]);
 

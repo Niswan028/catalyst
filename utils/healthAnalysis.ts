@@ -64,8 +64,8 @@ export function generateDailySummary(
   });
 
   const dominantMood = Object.keys(moodCounts).reduce((a, b) =>
-    moodCounts[a] > moodCounts[b] ? a : b
-  );
+    (moodCounts[a] ?? 0) > (moodCounts[b] ?? 0) ? a : b
+  , 'neutral');
   const mood_summary = `Overall mood: ${dominantMood}`;
 
   // Aggregate symptoms

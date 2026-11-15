@@ -145,7 +145,7 @@ export function detectAdherencePatterns(
     });
 
   timeSlotMap.forEach((data, timeSlot) => {
-    const [hour] = timeSlot.split(':').map(Number);
+    const hour = Number(timeSlot.split(':')[0] ?? 0);
     const missedPercentage =
       data.totalScheduled > 0 ? Math.round((data.missedCount / data.totalScheduled) * 100) : 0;
 

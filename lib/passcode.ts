@@ -25,12 +25,13 @@ export function generatePasscode(length: number = 6): string {
     const randomBytes = new Uint8Array(length);
     crypto.getRandomValues(randomBytes);
     for (let i = 0; i < length; i++) {
-      code += PASSCODE_CHARS[randomBytes[i] % PASSCODE_CHARS.length];
+      const byte = randomBytes[i] ?? 0;
+      code += PASSCODE_CHARS[byte % PASSCODE_CHARS.length] ?? '';
     }
   } else {
     for (let i = 0; i < length; i++) {
       const randomIndex = Math.floor(Math.random() * PASSCODE_CHARS.length);
-      code += PASSCODE_CHARS[randomIndex];
+      code += PASSCODE_CHARS[randomIndex] ?? '';
     }
   }
 

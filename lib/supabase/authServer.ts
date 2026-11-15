@@ -18,7 +18,7 @@ export async function getAuthenticatedContext(
   const cookieHeader = request.headers.get('cookie') || '';
   let tokenFromCookie: string | null = null;
   const match = cookieHeader.match(/sb-access-token=([^;]+)/);
-  if (match) {
+  if (match && match[1]) {
     tokenFromCookie = decodeURIComponent(match[1]);
   }
 
