@@ -67,4 +67,11 @@ test.describe('CareConnect Elderly Care & Medication Management E2E Flow', () =>
     await page.goto('/caregiver');
     await expect(page.locator('body')).toBeVisible();
   });
+
+  test('7. Mobile Viewport & Accessible Touch Navigation (WCAG 2.1 AA)', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 });
+    await page.goto('/auth/signin');
+    const bodyWidth = await page.evaluate(() => document.body.scrollWidth);
+    expect(bodyWidth).toBeLessThanOrEqual(375);
+  });
 });

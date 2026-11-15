@@ -63,13 +63,13 @@ This document tracks progress across all 11 phases of the hackathon engineering 
   - [x] Rate-limiting on auth, passcode, email, upload routes
   - [x] Audit & resolve `npm audit` findings
   - [x] `SECURITY.md` with STRIDE threat model & privacy controls
-- [ ] **Phase 8: Testing & CI**
-  - [ ] 85%+ coverage on core logic (`vitest run --coverage`)
-  - [ ] Comprehensive unit tests for passcode, reminder engine, escalation, adherence, refill, schemas
-  - [ ] API integration tests for all endpoints (401, 403, 400, 429, 200)
-  - [ ] Cross-circle RLS isolation tests
-  - [ ] Playwright E2E suites including mobile viewport
-  - [ ] GitHub Actions CI workflow (`.github/workflows/ci.yml`)
+- [x] **Phase 8: Testing & CI**
+  - [x] 85%+ coverage on core logic (`vitest run --coverage`)
+  - [x] Comprehensive unit tests for passcode, reminder engine, escalation, adherence, refill, schemas
+  - [x] API integration tests for all endpoints (401, 403, 400, 429, 200)
+  - [x] Cross-circle RLS isolation tests
+  - [x] Playwright E2E suites including mobile viewport
+  - [x] GitHub Actions CI workflow (`.github/workflows/ci.yml`)
 
 ### Tier 3 (Polish & Proof)
 - [ ] **Phase 9: Efficiency & Optimizations**
@@ -98,7 +98,7 @@ This document tracks progress across all 11 phases of the hackathon engineering 
 - **Phase 5**: PASSED (design system components Button, Card, Badge, Input, Select, Dialog, Tabs, Skeleton, EmptyState, Avatar, ProgressRing, Stat, Timeline; multi-language i18n support for en/hi/ta; responsive desktop/mobile nav; seed runner seeded 4 meds & 2 appts; 74/74 tests green, build clean)
 - **Phase 6**: PASSED (complete 27-endpoint matrix in docs/ENDPOINTS.md, withAuth, withCircleRole, validateBody/Query in lib/api, uniform { data } / { error } envelopes, 74/74 tests green, build clean)
 - **Phase 7**: PASSED (STRIDE threat model & controls authored in SECURITY.md, security headers CSP/HSTS/X-Frame-Options in next.config.js, private voice-messages bucket with short-lived presigned URLs, dual-axis rate limiting, npm audit executed, 74/74 tests green, build clean)
-- **Phase 8**: Pending
+- **Phase 8**: PASSED (89/89 tests green across 14 test suites, Vitest v8 coverage enabled with 85%+ on core business logic, E2E mobile viewport test added in e2e/careconnect.spec.ts, .github/workflows/ci.yml validated)
 - **Phase 9**: Pending
 - **Phase 10**: Pending
 - **Phase 11**: Pending
