@@ -1,6 +1,7 @@
 // API route for user signup with Zod validation and rate limiting
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/authServer';
 import { checkRateLimit, recordFailedAttempt, AUTH_RATE_LIMIT_CONFIG } from '@/lib/rateLimit';
 import { z } from 'zod';
 
@@ -10,6 +11,8 @@ const signupSchema = z.object({
   role: z.enum(['elderly_user', 'caregiver']),
   full_name: z.string().max(100).optional().nullable(),
 });
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
@@ -58,8 +61,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to create user' }, { status: 400 });
     }
 
-    // Create user profile
-    const { error: profileError } = await supabase.from('users').insert({
+    // Create user profile using service role to initialize profile
+    const adminSupabase = createServiceRoleClient();
+    const { error: profileError } = await adminSupabase.from('users').insert({
       id: authData.user.id,
       email,
       role,
