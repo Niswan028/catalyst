@@ -39,7 +39,7 @@
     "autoprefixer": "^10.4.17",
     "axe-core": "^4.14.0",
     "eslint": "^8.57.1",
-    "eslint-config-next": "^14.2.0",
+    "eslint-config-next": "^16.4.6",
     "eslint-plugin-react": "^7.33.2",
     "jsdom": "^31.0.1",
     "postcss": "^8.4.33",
