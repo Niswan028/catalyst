@@ -31,13 +31,13 @@ This document tracks progress across all 11 phases of the hackathon engineering 
   - [x] Refill forecasting from stock & daily dosage
   - [x] Appointments CRUD with `.ics` calendar export and dashboard widget
   - [x] Circle audit log table and elder-visible audit log viewer
-- [ ] **Phase 4: Proactive Email Reminders**
-  - [ ] Server-side email dispatcher (Nodemailer / Resend) with accessible HTML + plain-text fallback
-  - [ ] Scheduled cron route (`/api/cron/reminders`) protected with `CRON_SECRET`
-  - [ ] Reminders: upcoming doses, missed dose alerts (+15m, +60m escalation), appointment reminders (24h, 2h)
-  - [ ] Idempotency key deduplication in `notification_log`
-  - [ ] Per-member notification preferences & weekly circle digest
-  - [ ] Dev-only test reminder endpoint (`/api/cron/test-reminder`) and UI trigger
+- [x] **Phase 4: Proactive Email Reminders**
+  - [x] Server-side email dispatcher (Nodemailer / Resend) with accessible HTML + plain-text fallback
+  - [x] Scheduled cron route (`/api/cron/reminders`) protected with `CRON_SECRET`
+  - [x] Reminders: upcoming doses, missed dose alerts (+15m, +60m escalation), appointment reminders (24h, 2h)
+  - [x] Idempotency key deduplication in `notification_log`
+  - [x] Per-member notification preferences & weekly circle digest
+  - [x] Dev-only test reminder endpoint (`/api/cron/test-reminder`) and UI trigger (`components/TestReminderModal.tsx`)
 - [ ] **Phase 5: UI/UX Redesign (Calm, Modern Healthcare System)**
   - [ ] Design system tokens (colors, typography, spacing, radius, semantic colors paired with icons)
   - [ ] Reusable component library in `components/ui`: Button, Card, Badge, Input, Select, Dialog, Toast, Tabs, Skeleton, EmptyState, Avatar, ProgressRing, Stat, Timeline
@@ -94,9 +94,7 @@ This document tracks progress across all 11 phases of the hackathon engineering 
 - **Phase 1**: PASSED (lint: 0 errors/warnings, typecheck: 0 errors with noUncheckedIndexedAccess, vitest: 71/71 passed, build: 28/28 pages static/dynamic compiled)
 - **Phase 2**: PASSED (migration 04 created, dual IP/user rate-limiting verified, constant-time bcrypt checks, elder approvals/revocations functional, 71/71 tests green, build clean)
 - **Phase 3**: PASSED (zero-dose adherence "No data yet", .ics calendar exports with 24h/2h alarms, 74/74 tests green, build clean)
-- **Phase 4**: Pending
-- **Phase 3**: Pending
-- **Phase 4**: Pending
+- **Phase 4**: PASSED (server-side reminder engine, 2-stage missed dose escalation, 24h/2h appointment alarms, idempotency deduplication in notification_log, test reminder API & UI modal, 74/74 tests green, build clean)
 - **Phase 5**: Pending
 - **Phase 6**: Pending
 - **Phase 7**: Pending

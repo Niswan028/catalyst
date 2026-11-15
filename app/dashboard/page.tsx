@@ -14,6 +14,7 @@ import UpcomingAppointmentsWidget from '@/components/UpcomingAppointmentsWidget'
 import EasyModeView from '@/components/EasyModeView';
 import AdherenceInsightsCard from '@/components/AdherenceInsightsCard';
 import RefillPredictionWidget from '@/components/RefillPredictionWidget';
+import TestReminderModal from '@/components/TestReminderModal';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function DashboardPage() {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [alerts, setAlerts] = useState<StockAlert[]>([]);
   const [showCircleModal, setShowCircleModal] = useState(false);
+  const [showTestReminderModal, setShowTestReminderModal] = useState(false);
   const [isEasyMode, setIsEasyMode] = useState(false);
 
   const fetchData = async (authUser: any) => {
@@ -208,6 +210,14 @@ export default function DashboardPage() {
             >
               👥 Family Care Circle
             </Button>
+            <button
+              onClick={() => setShowTestReminderModal(true)}
+              className="px-3.5 py-2 rounded-xl text-sm font-semibold bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 shadow-sm transition-all flex items-center gap-1.5"
+              title="Test proactive email reminders (upcoming dose, missed dose escalation, appointments)"
+            >
+              <span>🔔</span>
+              <span>Test Reminders</span>
+            </button>
           </div>
         )}
       </div>
@@ -388,10 +398,17 @@ export default function DashboardPage() {
       )}
 
       {user.role === 'elderly_user' && (
-        <FamilyCircleModal
-          isOpen={showCircleModal}
-          onClose={() => setShowCircleModal(false)}
-        />
+        <>
+          <FamilyCircleModal
+            isOpen={showCircleModal}
+            onClose={() => setShowCircleModal(false)}
+          />
+          <TestReminderModal
+            isOpen={showTestReminderModal}
+            onClose={() => setShowTestReminderModal(false)}
+            defaultEmail={user.email || ''}
+          />
+        </>
       )}
     </div>
   );
