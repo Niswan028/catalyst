@@ -1,5 +1,6 @@
 // Hero banner component for Dashboard
 import React from 'react';
+import Link from 'next/link';
 import { User } from '@/lib/types';
 
 interface DashboardHeroProps {
@@ -28,7 +29,7 @@ export default function DashboardHero({
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span>Care Circle Connected</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
+          <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight">
             {greeting}, {user.full_name || 'Eleanor'}!
           </h1>
           <p className="text-teal-100 text-sm sm:text-base mt-1.5 max-w-xl">
@@ -38,6 +39,14 @@ export default function DashboardHero({
 
         {user.role === 'elderly_user' && (
           <div className="flex flex-wrap items-center gap-2.5">
+            <Link
+              href="/doctor-brief"
+              className="px-4 py-2.5 rounded-xl text-sm font-bold bg-white text-stone-900 hover:bg-stone-100 border border-stone-200 shadow-sm transition-transform active:scale-95 flex items-center gap-2 min-h-[44px]"
+            >
+              <span>📋</span>
+              <span>Doctor Brief</span>
+            </Link>
+
             <button
               onClick={onToggleEasyMode}
               className="px-4 py-2.5 rounded-xl text-sm font-bold bg-amber-400 hover:bg-amber-300 text-slate-900 border border-amber-500 shadow-sm transition-transform active:scale-95 flex items-center gap-2 min-h-[44px]"

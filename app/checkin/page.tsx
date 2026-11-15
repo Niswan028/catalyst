@@ -155,14 +155,21 @@ export default function CheckInPage() {
   }
 
   return (
-    <main className="max-w-2xl mx-auto space-y-6">
+    <main className="max-w-3xl mx-auto space-y-8 pb-16">
+      {/* Editorial Header */}
+      <div className="text-center border-b border-[#e6dfd3] dark:border-stone-800 pb-5">
+        <span className="text-[11px] uppercase tracking-widest font-bold text-stone-500 dark:text-stone-400 block mb-1">
+          Holistic Elder Wellness
+        </span>
+        <h1 className="font-serif text-4xl sm:text-5xl font-normal text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
+          Daily Health Check-In
+        </h1>
+        <p className="text-sm text-stone-600 dark:text-stone-300 mt-1.5 max-w-lg mx-auto">
+          Share how you are feeling today with spoken voice check-ins or easy text entry.
+        </p>
+      </div>
+
       <Card>
-        <header className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 mb-1">Daily Health Check-In</h1>
-          <p className="text-gray-600">
-            Share how you are feeling today by voice or text.
-          </p>
-        </header>
 
         {/* Input Mode Selector for WCAG 2.1 AA Accessibility */}
         <nav aria-label="Input method selector" className="flex justify-center mb-6">

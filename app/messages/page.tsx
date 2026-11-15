@@ -246,12 +246,23 @@ export default function MessagesPage() {
     user.role === 'caregiver' ? recipients : Array.from(elderRecipientsMap.values());
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Voice Messages</h1>
+    <div className="max-w-4xl mx-auto space-y-8 pb-16">
+      {/* Editorial Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#e6dfd3] dark:border-stone-800 pb-5">
+        <div>
+          <span className="text-[11px] uppercase tracking-widest font-bold text-stone-500 dark:text-stone-400 block mb-1">
+            Two-Way Voice & Family Circle Communication
+          </span>
+          <h1 className="font-serif text-4xl sm:text-5xl font-normal text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
+            Voice Messages
+          </h1>
+          <p className="text-sm text-stone-600 dark:text-stone-300 mt-1.5">
+            Send audio updates, daily check-ins, and reassuring notes between elders and family circles.
+          </p>
+        </div>
         {allRecipients.length > 0 && (
-          <Button onClick={() => setShowRecorder(!showRecorder)}>
-            {showRecorder ? 'Cancel' : '🎤 New Message'}
+          <Button onClick={() => setShowRecorder(!showRecorder)} className="shrink-0 font-bold">
+            {showRecorder ? '✕ Close' : '🎤 New Message'}
           </Button>
         )}
       </div>

@@ -101,18 +101,29 @@ export default function CaregiverDashboard() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Caregiver Dashboard</h1>
-        <div className="flex gap-2">
+    <div className="max-w-7xl mx-auto space-y-8 pb-16">
+      {/* Editorial Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#e6dfd3] dark:border-stone-800 pb-5">
+        <div>
+          <span className="text-[11px] uppercase tracking-widest font-bold text-stone-500 dark:text-stone-400 block mb-1">
+            Passcode Access & Family Circles
+          </span>
+          <h1 className="font-serif text-4xl sm:text-5xl font-normal text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
+            Care Circle Hub
+          </h1>
+          <p className="text-sm text-stone-600 dark:text-stone-300 mt-1.5">
+            Monitor adherence trends, respond to stock refill alerts, and coordinate doctor visits.
+          </p>
+        </div>
+        <div className="flex items-center gap-2.5 shrink-0">
           <Button
             onClick={() => setShowJoinPasscodeModal(true)}
-            className="bg-primary-600 hover:bg-primary-700 text-white font-medium"
+            className="bg-stone-900 hover:bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900 font-bold rounded-xl shadow-xs"
           >
             🔑 Join with Passcode
           </Button>
           <Button variant="secondary" onClick={() => setShowLinkForm(!showLinkForm)}>
-            {showLinkForm ? 'Cancel' : 'Email Link'}
+            {showLinkForm ? '✕ Close' : 'Email Link'}
           </Button>
         </div>
       </div>

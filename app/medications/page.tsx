@@ -220,11 +220,22 @@ export default function MedicationsPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold text-gray-800">Medications</h1>
-        <Button onClick={() => setShowAddForm(!showAddForm)}>
-          {showAddForm ? 'Cancel' : '+ Add Medication'}
+    <div className="max-w-4xl mx-auto space-y-8 pb-16">
+      {/* Editorial Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#e6dfd3] dark:border-stone-800 pb-5">
+        <div>
+          <span className="text-[11px] uppercase tracking-widest font-bold text-stone-500 dark:text-stone-400 block mb-1">
+            Schedule & Prescription Inventory
+          </span>
+          <h1 className="font-serif text-4xl sm:text-5xl font-normal text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
+            Prescriptions
+          </h1>
+          <p className="text-sm text-stone-600 dark:text-stone-300 mt-1.5">
+            Manage daily schedules, stock refill thresholds, dose tracking, and caregiver alerts.
+          </p>
+        </div>
+        <Button onClick={() => setShowAddForm(!showAddForm)} className="shrink-0 font-bold">
+          {showAddForm ? '✕ Close Form' : '+ Add Medication'}
         </Button>
       </div>
 

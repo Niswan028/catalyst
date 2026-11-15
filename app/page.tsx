@@ -58,39 +58,46 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between">
       {/* Sticky Global Header */}
-      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
+      <header className="sticky top-0 z-40 bg-[#fbf9f5]/95 dark:bg-stone-900/95 backdrop-blur-md border-b border-[#e6dfd3] dark:border-stone-800">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 overflow-x-hidden">
           <Link href="/" className="flex items-center gap-2 shrink-0">
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-primary-700 to-primary-500 text-white flex items-center justify-center font-extrabold text-lg sm:text-xl shadow-sm">
               C+
             </div>
             <div>
-              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 block leading-tight">
+              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-stone-900 dark:text-stone-100 block leading-tight">
                 Care<span className="text-primary-600">Connect</span>
               </span>
-              <span className="text-[9px] sm:text-[10px] text-slate-600 font-semibold block uppercase tracking-wider">
-                Elder Healthcare
+              <span className="text-[9px] sm:text-[10px] text-stone-500 font-semibold block uppercase tracking-wider">
+                Vance Circle · Elder Healthcare
               </span>
             </div>
           </Link>
 
           <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <Link
+              href="/doctor-brief"
+              className="text-xs sm:text-sm font-bold text-stone-900 bg-white hover:bg-stone-100 border border-stone-300 dark:bg-stone-800 dark:text-stone-100 dark:border-stone-700 px-2.5 sm:px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-xs"
+            >
+              <span>📋</span>
+              <span className="hidden xs:inline">Doctor Brief</span>
+            </Link>
+            <Link
               href="/demo"
-              className="text-xs sm:text-sm font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2.5 sm:px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-xs"
+              className="text-xs sm:text-sm font-bold text-amber-900 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2.5 sm:px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-xs"
             >
               <span>🏆</span>
               <span className="hidden xs:inline">Tour</span>
             </Link>
             <Link
               href="/auth/signin"
-              className="text-xs sm:text-sm font-bold text-slate-700 hover:text-primary-700 px-2 sm:px-3 py-1.5 rounded-lg transition"
+              className="text-xs sm:text-sm font-bold text-stone-700 hover:text-stone-900 px-2 sm:px-3 py-1.5 rounded-lg transition"
             >
               Sign In
             </Link>
             <Link
               href="/auth/signup"
-              className="bg-primary-600 hover:bg-primary-700 text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm transition active:scale-95"
+              className="bg-stone-900 hover:bg-stone-800 text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm transition active:scale-95"
             >
               Get Started
             </Link>
@@ -100,30 +107,30 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <main className="flex-1">
-        <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28 bg-gradient-to-b from-white via-slate-50 to-slate-100 border-b border-slate-200">
+        <section className="relative overflow-hidden pt-12 pb-20 lg:pt-20 lg:pb-28 bg-[#f7f4ee] border-b border-[#e6dfd3]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
             {/* Top Pill */}
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-50 border border-primary-200 text-primary-800 text-xs sm:text-sm font-bold mb-6 shadow-xs animate-fadeIn">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#e6dfd3] text-stone-800 text-xs sm:text-sm font-bold mb-6 shadow-xs animate-fadeIn">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
               <span>Smart Passcode Care Circles • Sample demo data</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight max-w-4xl mx-auto leading-tight">
+            <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal text-stone-900 tracking-tight max-w-4xl mx-auto leading-tight">
               Smarter Medication Schedules.{' '}
-              <span className="bg-gradient-to-r from-primary-700 to-teal-600 bg-clip-text text-transparent">
+              <span className="text-primary-700">
                 Elder-Centric Care.
               </span>
             </h1>
 
-            <p className="mt-5 text-base sm:text-lg lg:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed">
+            <p className="mt-5 text-base sm:text-lg lg:text-xl text-stone-600 max-w-2xl mx-auto leading-relaxed">
               A collaborative healthcare platform where elderly adults, caregivers, and family members
               manage prescriptions, adherence, and doctor appointments through secure passcode-based circles
               with proactive multi-tier email escalations.
             </p>
 
             {/* Quick 1-Click Demo Buttons */}
-            <div className="mt-8 p-5 max-w-xl mx-auto bg-white rounded-2xl border-2 border-primary-200 shadow-floating">
-              <p className="text-xs font-bold uppercase tracking-wider text-primary-800 mb-3">
+            <div className="mt-8 p-6 max-w-xl mx-auto bg-white rounded-2xl border border-[#e6dfd3] shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
+              <p className="text-[11px] font-bold uppercase tracking-widest text-stone-600 mb-3">
                 ⚡ Instant Evaluation: 1-Click Live Demo Access
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -131,7 +138,7 @@ export default function HomePage() {
                   type="button"
                   disabled={loggingInRole !== null}
                   onClick={() => handleQuickDemoLogin('elder')}
-                  className="bg-primary-600 hover:bg-primary-700 text-white font-extrabold text-sm py-3.5 px-4 rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+                  className="bg-primary-700 hover:bg-primary-800 text-white font-extrabold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   {loggingInRole === 'elder' ? (
                     <LoadingSpinner size="sm" />
@@ -147,7 +154,7 @@ export default function HomePage() {
                   type="button"
                   disabled={loggingInRole !== null}
                   onClick={() => handleQuickDemoLogin('caregiver')}
-                  className="bg-slate-800 hover:bg-slate-900 text-white font-extrabold text-sm py-3.5 px-4 rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-2"
+                  className="bg-stone-900 hover:bg-stone-800 text-white font-extrabold text-sm py-3.5 px-4 rounded-xl shadow-xs transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   {loggingInRole === 'caregiver' ? (
                     <LoadingSpinner size="sm" />
@@ -210,13 +217,13 @@ export default function HomePage() {
         <section className="py-16 bg-slate-50 border-b border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center max-w-2xl mx-auto mb-12">
-              <span className="text-xs font-bold text-primary-700 uppercase tracking-widest block mb-1">
+              <span className="text-[11px] font-bold text-primary-700 uppercase tracking-widest block mb-1">
                 Simple & Trustworthy
               </span>
-              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+              <h2 className="font-serif text-3xl sm:text-4xl font-normal text-stone-900 tracking-tight">
                 How CareConnect Works in 3 Steps
               </h2>
-              <p className="text-sm text-slate-600 mt-2">
+              <p className="text-sm text-stone-600 mt-2">
                 Designed to keep the elder in full control of their health without technical friction.
               </p>
             </div>
@@ -258,13 +265,13 @@ export default function HomePage() {
         {/* Core Pillars Grid */}
         <section className="py-16 lg:py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-16">
-            <h2 className="text-xs font-bold text-primary-700 uppercase tracking-widest mb-2">
+            <h2 className="text-[11px] font-bold text-primary-700 uppercase tracking-widest mb-2">
               Beyond Basic Reminders
             </h2>
-            <h3 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            <h3 className="font-serif text-3xl sm:text-4xl font-normal text-stone-900 tracking-tight">
               Six Pillars of Proactive Elderly Care
             </h3>
-            <p className="text-slate-600 mt-3 text-base">
+            <p className="text-stone-600 mt-3 text-base">
               Engineered from the ground up to keep the elderly individual at the center of their own healthcare decisions.
             </p>
           </div>

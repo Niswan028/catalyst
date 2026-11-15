@@ -22,7 +22,7 @@ export default function MedicationsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+    <div className="min-h-screen bg-[#f7f4ee] dark:bg-stone-950 text-stone-900 dark:text-stone-100">
       <Navbar />
       <main className="container mx-auto px-4 py-8">{children}</main>
     </div>

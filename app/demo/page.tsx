@@ -137,7 +137,7 @@ export default function DemoGuidePage() {
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-xs font-semibold text-teal-200 mb-3 border border-white/20">
           <span>🏆</span> Round 2 Judge & Evaluator Guide
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+        <h1 className="font-serif text-3xl sm:text-4xl lg:text-5xl font-normal tracking-tight">
           CareConnect Evaluation Portal
         </h1>
         <p className="text-teal-100 text-sm sm:text-base mt-2 max-w-2xl leading-relaxed">
@@ -174,7 +174,7 @@ export default function DemoGuidePage() {
 
       {/* 1-Click Persona Accounts */}
       <div>
-        <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-3">
+        <h2 className="font-serif text-2xl font-normal text-stone-900 dark:text-stone-100 mb-3">
           Instant 1-Click Evaluation Personas
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

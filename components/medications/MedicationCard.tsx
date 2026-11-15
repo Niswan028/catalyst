@@ -36,12 +36,12 @@ export default function MedicationCard({
       : '🌙 Bedtime';
 
   return (
-    <Card className="hover:shadow-md transition-shadow border border-slate-200/90 dark:border-slate-800">
+    <Card className="hover:shadow-md transition-shadow border border-[#e6dfd3] dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-6 sm:p-7">
       <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
         {/* Medication Info & Schedule Chips */}
         <div className="flex-1 space-y-3">
           <div className="flex items-center gap-2.5 flex-wrap">
-            <h3 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
+            <h3 className="font-serif text-2xl font-normal text-stone-900 dark:text-stone-100">
               {med.name}
             </h3>
             <span className="text-xs px-2.5 py-0.5 rounded-full bg-primary-100 text-primary-800 dark:bg-primary-950 dark:text-primary-200 font-bold">

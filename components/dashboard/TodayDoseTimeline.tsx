@@ -48,11 +48,11 @@ export default function TodayDoseTimeline({
   });
 
   return (
-    <div className="lg:col-span-2 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-card">
-      <div className="flex items-center justify-between mb-4">
+    <div className="lg:col-span-2 bg-white dark:bg-stone-900 p-6 sm:p-7 rounded-2xl border border-[#e6dfd3] dark:border-stone-800 shadow-[0_1px_3px_rgba(0,0,0,0.03)]">
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-stone-100 dark:border-stone-800">
         <div className="flex items-center gap-2">
-          <Icons.Medications size={20} className="text-primary-700" />
-          <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+          <Icons.Medications size={22} className="text-primary-700 dark:text-primary-400" />
+          <h3 className="font-serif text-2xl font-normal text-stone-900 dark:text-stone-100">
             Today&apos;s Medication Schedule
           </h3>
         </div>

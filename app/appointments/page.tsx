@@ -38,30 +38,35 @@ function AppointmentsContent() {
   } = useAppointmentsData();
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="max-w-5xl mx-auto space-y-8 pb-16">
+      {/* Editorial Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#e6dfd3] dark:border-stone-800 pb-5">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Doctor Appointments</h1>
-          <p className="text-gray-600 text-sm mt-1">
-            Keep track of doctor consultations, clinical visits, and medical checkups.
+          <span className="text-[11px] uppercase tracking-widest font-bold text-stone-500 dark:text-stone-400 block mb-1">
+            Clinical Calendar & Specialist Consultations
+          </span>
+          <h1 className="font-serif text-4xl sm:text-5xl font-normal text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
+            Appointments
+          </h1>
+          <p className="text-sm text-stone-600 dark:text-stone-300 mt-1.5">
+            Keep track of doctor consultations, clinic locations, specialist notes, and .ics calendar sync.
           </p>
         </div>
-        <Button onClick={openCreateModal} variant="primary" className="py-2.5 px-5 shadow-sm">
+        <Button onClick={openCreateModal} variant="primary" className="py-2.5 px-5 shadow-xs font-bold shrink-0">
           + Schedule Appointment
         </Button>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex border-b border-gray-200 gap-2">
+      <div className="flex border-b border-[#e6dfd3] dark:border-stone-800 gap-2">
         {(['upcoming', 'done', 'cancelled', 'all'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveFilter(tab)}
-            className={`pb-3 px-4 font-semibold text-sm capitalize transition-colors border-b-2 ${
+            className={`pb-3 px-4 font-bold text-xs sm:text-sm uppercase tracking-wider transition-colors border-b-2 ${
               activeFilter === tab
-                ? 'border-primary-600 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-800'
+                ? 'border-stone-900 text-stone-900 dark:border-stone-100 dark:text-stone-100'
+                : 'border-transparent text-stone-500 hover:text-stone-800 dark:hover:text-stone-200'
             }`}
           >
             {tab === 'done' ? 'Completed' : tab}

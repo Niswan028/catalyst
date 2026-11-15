@@ -115,15 +115,20 @@ export default function AuditLogPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Editorial Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#e6dfd3] dark:border-stone-800 pb-5">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Care Circle Audit Trail</h1>
-          <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
+          <span className="text-[11px] uppercase tracking-widest font-bold text-stone-500 dark:text-stone-400 block mb-1">
+            Compliance & Activity Verification
+          </span>
+          <h1 className="font-serif text-4xl sm:text-5xl font-normal text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
+            Audit Trail
+          </h1>
+          <p className="text-sm text-stone-600 dark:text-stone-300 mt-1.5">
             Tamper-evident record of all care circle actions, passcode generations, and caregiver access.
           </p>
         </div>
-        <Button onClick={fetchAuditLogs} variant="secondary" size="sm">
+        <Button onClick={fetchAuditLogs} variant="secondary" size="sm" className="font-bold shrink-0">
           🔄 Refresh Log
         </Button>
       </div>

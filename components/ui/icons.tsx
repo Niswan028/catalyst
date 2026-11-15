@@ -160,4 +160,9 @@ export const Icons = {
       <line x1="12" y1="15" x2="12" y2="3" />
     </svg>
   ),
+  ChevronDown: ({ size = 20, className, ...props }: IconProps) => (
+    <svg {...baseProps(size, className)} {...props}>
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  ),
 };

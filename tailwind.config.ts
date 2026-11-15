@@ -11,6 +11,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
+        paper: {
+          50: '#fbf9f5',
+          100: '#f7f4ee',
+          200: '#eee7db',
+          300: '#e2d7c5',
+          400: '#c5b59e',
+          500: '#a8947a',
+          600: '#8c775f',
+          700: '#6f5d4a',
+          800: '#544638',
+          900: '#3c3127',
+        },
         // Modern clinical teal / calming healthcare palette
         primary: {
           50: '#f0fdfa',
@@ -36,6 +48,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        serif: ['ui-serif', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
       },
       borderRadius: {
         xl: '0.875rem',

@@ -161,10 +161,15 @@ export default function SettingsPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Settings & Accessibility</h1>
-        <p className="text-slate-600 dark:text-slate-400 text-sm mt-1">
+      {/* Editorial Header */}
+      <div className="border-b border-[#e6dfd3] dark:border-stone-800 pb-5">
+        <span className="text-[11px] uppercase tracking-widest font-bold text-stone-500 dark:text-stone-400 block mb-1">
+          Preferences & Display Controls
+        </span>
+        <h1 className="font-serif text-4xl sm:text-5xl font-normal text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
+          Settings
+        </h1>
+        <p className="text-sm text-stone-600 dark:text-stone-300 mt-1.5">
           Customize notifications, privacy sharing permissions, display readability, and language preferences.
         </p>
       </div>

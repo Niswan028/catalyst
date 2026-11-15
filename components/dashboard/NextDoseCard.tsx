@@ -40,10 +40,10 @@ export default function NextDoseCard({
   }
 
   return (
-    <div className="lg:col-span-1 bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-card flex flex-col justify-between">
+    <div className="lg:col-span-1 bg-white dark:bg-stone-900 p-6 sm:p-7 rounded-2xl border border-[#e6dfd3] dark:border-stone-800 shadow-[0_1px_3px_rgba(0,0,0,0.03)] flex flex-col justify-between">
       <div>
         <div className="flex items-center justify-between mb-4">
-          <span className="text-xs font-bold uppercase tracking-wider text-primary-700 bg-primary-50 dark:bg-primary-950 px-2.5 py-1 rounded-lg">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-primary-800 bg-primary-50 dark:bg-primary-950 px-2.5 py-1 rounded-lg">
             Next Due Medication
           </span>
           {upcomingMed && (
@@ -56,7 +56,7 @@ export default function NextDoseCard({
         {upcomingMed ? (
           <div className="space-y-3">
             <div className="flex items-baseline justify-between">
-              <h3 className="text-2xl font-black text-slate-900 dark:text-slate-100">{upcomingMed.name}</h3>
+              <h3 className="font-serif text-2xl sm:text-3xl font-normal text-stone-900 dark:text-stone-100">{upcomingMed.name}</h3>
               {countdownText && (
                 <span className="text-xs font-bold text-primary-700 dark:text-primary-300 bg-primary-100 dark:bg-primary-950 px-2 py-0.5 rounded-full">
                   {countdownText}

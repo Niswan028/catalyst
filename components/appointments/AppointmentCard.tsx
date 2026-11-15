@@ -30,12 +30,12 @@ export default function AppointmentCard({
   };
 
   return (
-    <Card className="hover:shadow-md transition-shadow">
+    <Card className="hover:shadow-md transition-shadow border border-[#e6dfd3] dark:border-stone-800 bg-white dark:bg-stone-900 rounded-2xl p-6 sm:p-7">
       <div className="flex justify-between items-start mb-3">
         <div>
-          <h3 className="font-bold text-gray-900 text-lg">{appt.doctor_name}</h3>
+          <h3 className="font-serif text-2xl font-normal text-stone-900 dark:text-stone-100">{appt.doctor_name}</h3>
           {appt.specialty && (
-            <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary-100 text-primary-800">
+            <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-primary-100 text-primary-800 dark:bg-primary-950 dark:text-primary-300">
               {appt.specialty}
             </span>
           )}
@@ -43,27 +43,27 @@ export default function AppointmentCard({
         {getStatusBadge(appt.status)}
       </div>
 
-      <div className="space-y-1.5 text-sm text-gray-700 mb-4">
+      <div className="space-y-2 text-sm text-stone-700 dark:text-stone-300 mb-4">
         <div className="flex items-center gap-2">
-          <span className="text-gray-500">📅</span>
-          <span className="font-medium text-gray-900">
+          <span className="text-stone-500">📅</span>
+          <span className="font-medium text-stone-900 dark:text-stone-100">
             {format(dateObj, 'EEEE, MMMM d, yyyy')}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-gray-500">⏰</span>
-          <span className="font-semibold text-primary-700">
+          <span className="text-stone-500">⏰</span>
+          <span className="font-bold text-primary-800 dark:text-primary-400">
             {format(dateObj, 'h:mm a')}
           </span>
         </div>
         {appt.location && (
           <div className="flex items-center gap-2">
-            <span className="text-gray-500">📍</span>
+            <span className="text-stone-500">📍</span>
             <span>{appt.location}</span>
           </div>
         )}
         {appt.notes && (
-          <div className="mt-2 p-2 bg-gray-50 rounded-lg text-xs text-gray-600">
+          <div className="mt-2 p-3 bg-stone-50 dark:bg-stone-800/50 rounded-xl text-xs text-stone-700 dark:text-stone-300 border border-stone-200/60 dark:border-stone-700">
             <strong>Notes:</strong> {appt.notes}
           </div>
         )}

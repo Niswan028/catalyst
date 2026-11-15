@@ -3,17 +3,32 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 15, 23, 42;
-  --background-rgb: 248, 250, 252;
+  --foreground-rgb: 28, 25, 23;
+  --background-rgb: 247, 244, 238;
   --card-bg: 255, 255, 255;
-  --border-color: 226, 232, 240;
+  --border-color: 230, 224, 212;
 }
 
 .dark {
-  --foreground-rgb: 241, 245, 249;
-  --background-rgb: 15, 23, 42;
-  --card-bg: 30, 41, 59;
-  --border-color: 51, 65, 85;
+  --foreground-rgb: 245, 245, 244;
+  --background-rgb: 28, 25, 23;
+  --card-bg: 41, 37, 36;
+  --border-color: 68, 64, 60;
+}
+
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #111827 !important;
+  }
+  .no-print, header, nav, aside {
+    display: none !important;
+  }
+  main {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
 }
 
 body {

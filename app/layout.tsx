@@ -92,7 +92,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={`${inter.variable} font-sans antialiased bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen`}>
+      <body className={`${inter.variable} font-sans antialiased bg-[#f7f4ee] text-stone-900 dark:bg-stone-950 dark:text-stone-100 min-h-screen`}>
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
