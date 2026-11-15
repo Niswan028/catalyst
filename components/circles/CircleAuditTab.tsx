@@ -1,8 +1,19 @@
 // Circle security audit logs tab component
 import React from 'react';
 
+export interface CircleAuditLogItem {
+  id: string;
+  action: string;
+  created_at: string;
+  actor?: {
+    full_name?: string;
+    email?: string;
+  };
+  details?: Record<string, unknown> | null;
+}
+
 interface CircleAuditTabProps {
-  auditLogs: any[];
+  auditLogs: CircleAuditLogItem[];
 }
 
 export default function CircleAuditTab({ auditLogs }: CircleAuditTabProps) {

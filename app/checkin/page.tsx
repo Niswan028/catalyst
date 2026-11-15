@@ -134,8 +134,9 @@ export default function CheckInPage() {
         speak('Thank you! Your check-in has been recorded.');
       }
       setStep('complete');
-    } catch (err: any) {
-      setError(err.message || 'Failed to submit check-in');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to submit check-in';
+      setError(msg);
       setStep('ready');
     }
   };

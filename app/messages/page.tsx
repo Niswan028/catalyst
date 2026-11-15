@@ -14,9 +14,9 @@ import { format } from 'date-fns';
 export default function MessagesPage() {
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
-  const [messages, setMessages] = useState<any[]>([]);
-  const [linkedUsers, setLinkedUsers] = useState<any[]>([]);
-  const [circleRecipients, setCircleRecipients] = useState<any[]>([]);
+  const [messages, setMessages] = useState<VoiceMessage[]>([]);
+  const [linkedUsers, setLinkedUsers] = useState<{ elderly_user: User }[]>([]);
+  const [circleRecipients, setCircleRecipients] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRecorder, setShowRecorder] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState<string>('');
@@ -123,10 +123,10 @@ export default function MessagesPage() {
         if (mData.members) {
           const recips = mData.members
             .filter(
-              (m: any) =>
+              (m: { user?: User; status?: string }) =>
                 m.user && m.user.id !== session.user.id && m.status === 'approved'
             )
-            .map((m: any) => m.user);
+            .map((m: { user: User }) => m.user);
           setCircleRecipients(recips);
         }
       }
@@ -184,8 +184,9 @@ export default function MessagesPage() {
       setSelectedRecipient('');
       fetchMessages();
       setTimeout(() => setSuccess(''), 3000);
-    } catch (error: any) {
-      setError(error.message || 'Failed to send message');
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Failed to send message';
+      setError(msg);
     }
   };
 
@@ -228,8 +229,8 @@ export default function MessagesPage() {
     ? Array.from(
         new Map(
           messages
-            .filter((m) => m.sender_id !== user.id)
-            .map((m) => [m.sender.id, m.sender])
+            .filter((m) => m.sender_id !== user.id && m.sender)
+            .map((m) => [m.sender!.id, m.sender])
         ).values()
       )
     : [];
@@ -280,7 +281,7 @@ export default function MessagesPage() {
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
               >
                 <option value="">Select recipient...</option>
-                {allRecipients.map((recipient: any) => (
+                {allRecipients.map((recipient: User) => (
                   <option key={recipient.id} value={recipient.id}>
                     {recipient.full_name || recipient.email}
                   </option>
@@ -341,9 +342,9 @@ export default function MessagesPage() {
                     <div>
                       <p className="font-medium text-gray-800">
                         {isSent ? (
-                          <>To: {message.recipient.full_name || message.recipient.email}</>
+                          <>To: {message.recipient?.full_name || message.recipient?.email || 'Care Circle Member'}</>
                         ) : (
-                          <>From: {message.sender.full_name || message.sender.email}</>
+                          <>From: {message.sender?.full_name || message.sender?.email || 'Care Circle Member'}</>
                         )}
                       </p>
                       <p className="text-sm text-gray-500">

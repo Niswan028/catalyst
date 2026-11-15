@@ -15,7 +15,7 @@ interface AuditRecord {
   action: string;
   resource_type: string;
   resource_id?: string;
-  details?: any;
+  details?: Record<string, unknown> | null;
   created_at: string;
   actor?: {
     full_name?: string;
