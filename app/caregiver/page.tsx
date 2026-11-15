@@ -9,6 +9,7 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { format } from 'date-fns';
+import JoinCircleModal from '@/components/JoinCircleModal';
 
 interface LinkedUser {
   id: string;
@@ -79,6 +80,7 @@ export default function CaregiverDashboard() {
   
   // Link form
   const [showLinkForm, setShowLinkForm] = useState(false);
+  const [showJoinPasscodeModal, setShowJoinPasscodeModal] = useState(false);
   const [linkEmail, setLinkEmail] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -363,9 +365,17 @@ export default function CaregiverDashboard() {
     <div className="max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-800">Caregiver Dashboard</h1>
-        <Button onClick={() => setShowLinkForm(!showLinkForm)}>
-          {showLinkForm ? 'Cancel' : '+ Link Elderly User'}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            onClick={() => setShowJoinPasscodeModal(true)}
+            className="bg-primary-600 hover:bg-primary-700 text-white font-medium"
+          >
+            🔑 Join with Passcode
+          </Button>
+          <Button variant="secondary" onClick={() => setShowLinkForm(!showLinkForm)}>
+            {showLinkForm ? 'Cancel' : 'Email Link'}
+          </Button>
+        </div>
       </div>
 
       {error && (
@@ -773,6 +783,15 @@ export default function CaregiverDashboard() {
           )}
         </div>
       </div>
+
+      <JoinCircleModal
+        isOpen={showJoinPasscodeModal}
+        onClose={() => setShowJoinPasscodeModal(false)}
+        onSuccess={() => {
+          fetchLinkedUsers();
+          fetchAlerts();
+        }}
+      />
     </div>
   );
 }

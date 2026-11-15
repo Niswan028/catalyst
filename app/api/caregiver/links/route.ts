@@ -1,174 +1,110 @@
-// API route for caregiver links
+// API route for caregiver links (updated for Care Circles and Passcode-based access)
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getAuthenticatedContext, createServiceRoleClient } from '@/lib/supabase/authServer';
 
 export async function POST(request: NextRequest) {
   try {
-    // Get auth token from header
-    const authHeader = request.headers.get('Authorization');
-    
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    const authResult = await getAuthenticatedContext(request);
+    if ('error' in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+
+    // Direct email linking has been upgraded to Passcode-based family circles
+    return NextResponse.json(
       {
-        global: {
-          headers: authHeader ? { Authorization: authHeader } : {},
-        },
-      }
+        error:
+          'Direct email linking has been upgraded to secure Passcode-based access. Please ask the elder for an invite passcode and use the "Join Family Circle" feature.',
+        actionRequired: 'USE_PASSCODE',
+      },
+      { status: 400 }
     );
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Verify user is a caregiver
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', user.id)
-      .single();
-
-    if (!userData || userData.role !== 'caregiver') {
-      return NextResponse.json(
-        { error: 'Only caregivers can create links' },
-        { status: 403 }
-      );
-    }
-
-    const { elderly_user_email } = await request.json();
-
-    if (!elderly_user_email) {
-      return NextResponse.json(
-        { error: 'Elderly user email is required' },
-        { status: 400 }
-      );
-    }
-
-    // Find elderly user by email
-    const { data: elderlyUser, error: findError } = await supabase
-      .from('users')
-      .select('id, email, full_name, role')
-      .eq('email', elderly_user_email)
-      .eq('role', 'elderly_user')
-      .single();
-
-    if (findError || !elderlyUser) {
-      return NextResponse.json(
-        { error: 'Elderly user not found. Make sure they have signed up as an Elderly User.' },
-        { status: 404 }
-      );
-    }
-
-    // Check if link already exists
-    const { data: existingLink } = await supabase
-      .from('caregiver_links')
-      .select('id')
-      .eq('caregiver_id', user.id)
-      .eq('elderly_user_id', elderlyUser.id)
-      .single();
-
-    if (existingLink) {
-      return NextResponse.json(
-        { error: 'You are already linked to this user' },
-        { status: 400 }
-      );
-    }
-
-    // Create link
-    const { data, error } = await supabase
-      .from('caregiver_links')
-      .insert({
-        caregiver_id: user.id,
-        elderly_user_id: elderlyUser.id,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-
-    return NextResponse.json({
-      message: 'Successfully linked to ' + (elderlyUser.full_name || elderlyUser.email),
-      link: data,
-      elderly_user: elderlyUser,
-    });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    // Get auth token from header
-    const authHeader = request.headers.get('Authorization');
-    
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: authHeader ? { Authorization: authHeader } : {},
-        },
-      }
-    );
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await getAuthenticatedContext(request);
+    if ('error' in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+    const { supabase, user } = authResult;
+    const adminSupabase = createServiceRoleClient();
 
-    // Get linked users
-    const { data, error } = await supabase
+    // 1. Fetch approved circle memberships
+    const { data: circleMemberships } = await adminSupabase
+      .from('circle_members')
+      .select(`
+        id,
+        role,
+        status,
+        permissions,
+        created_at:joined_at,
+        circle:care_circles(
+          id,
+          name,
+          elder_id,
+          elder:users!care_circles_elder_id_fkey(
+            id,
+            email,
+            full_name,
+            role,
+            created_at
+          )
+        )
+      `)
+      .eq('user_id', user.id)
+      .eq('status', 'approved');
+
+    // 2. Fetch legacy caregiver links (if any)
+    const { data: legacyLinks } = await supabase
       .from('caregiver_links')
       .select('*, elderly_user:users!caregiver_links_elderly_user_id_fkey(id, email, full_name, role, created_at)')
       .eq('caregiver_id', user.id);
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+    const formattedCircleLinks = (circleMemberships || [])
+      .filter((m: any) => m.circle && m.circle.elder)
+      .map((m: any) => ({
+        id: m.id,
+        caregiver_id: user.id,
+        elderly_user_id: m.circle.elder.id,
+        elderly_user: m.circle.elder,
+        role: m.role,
+        permissions: m.permissions,
+        circle_id: m.circle.id,
+        circle_name: m.circle.name,
+        created_at: m.created_at,
+      }));
+
+    // Merge without duplicates
+    const seenElderIds = new Set(formattedCircleLinks.map((l: any) => l.elderly_user_id));
+    const mergedLinks = [...formattedCircleLinks];
+
+    if (legacyLinks) {
+      for (const link of legacyLinks) {
+        if (link.elderly_user && !seenElderIds.has(link.elderly_user_id)) {
+          seenElderIds.add(link.elderly_user_id);
+          mergedLinks.push(link);
+        }
+      }
     }
 
-    return NextResponse.json({ links: data });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ links: mergedLinks });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
-    // Get auth token from header
-    const authHeader = request.headers.get('Authorization');
-    
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: authHeader ? { Authorization: authHeader } : {},
-        },
-      }
-    );
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await getAuthenticatedContext(request);
+    if ('error' in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+    const { supabase, user } = authResult;
 
     const { searchParams } = new URL(request.url);
     const linkId = searchParams.get('id');
@@ -177,20 +113,13 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Link ID is required' }, { status: 400 });
     }
 
-    // Delete link
-    const { error } = await supabase
-      .from('caregiver_links')
-      .delete()
-      .eq('id', linkId)
-      .eq('caregiver_id', user.id);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
+    // Attempt to delete from circle_members or caregiver_links
+    await supabase.from('circle_members').delete().eq('id', linkId).eq('user_id', user.id);
+    await supabase.from('caregiver_links').delete().eq('id', linkId).eq('caregiver_id', user.id);
 
     return NextResponse.json({ message: 'Link removed successfully' });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

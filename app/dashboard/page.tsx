@@ -9,6 +9,7 @@ import Button from '@/components/Button';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { User, DailySummary, Medication, StockAlert } from '@/lib/types';
 import { format } from 'date-fns';
+import FamilyCircleModal from '@/components/FamilyCircleModal';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -17,6 +18,7 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState<DailySummary | null>(null);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [alerts, setAlerts] = useState<StockAlert[]>([]);
+  const [showCircleModal, setShowCircleModal] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -158,6 +160,15 @@ export default function DashboardPage() {
         <h1 className="text-3xl font-bold text-gray-800">
           Welcome back, {user.full_name || user.email}!
         </h1>
+        {user.role === 'elderly_user' && (
+          <Button
+            variant="secondary"
+            onClick={() => setShowCircleModal(true)}
+            className="flex items-center gap-2 border border-primary-300 hover:bg-primary-50"
+          >
+            👥 Family Care Circle
+          </Button>
+        )}
       </div>
 
       {user.role === 'elderly_user' ? (
@@ -322,6 +333,13 @@ export default function DashboardPage() {
             </div>
           </Card>
         </>
+      )}
+
+      {user.role === 'elderly_user' && (
+        <FamilyCircleModal
+          isOpen={showCircleModal}
+          onClose={() => setShowCircleModal(false)}
+        />
       )}
     </div>
   );
