@@ -88,7 +88,11 @@ function SignInContent() {
       if (!clientError && clientData?.session) {
         document.cookie = `sb-access-token=${clientData.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
         const userRole = clientData.user?.user_metadata?.role;
-        const targetRoute = getPostAuthRedirect(userRole, redirectParam);
+        const targetRoute = getPostAuthRedirect(
+          userRole,
+          redirectParam,
+          clientData.user?.email || clientData.user?.user_metadata?.full_name
+        );
         router.push(targetRoute);
         router.refresh();
         return;
@@ -114,7 +118,11 @@ function SignInContent() {
         document.cookie = `sb-access-token=${serverData.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
       }
 
-      const targetRoute = getPostAuthRedirect(serverData.user?.role, redirectParam);
+      const targetRoute = getPostAuthRedirect(
+        serverData.user?.role,
+        redirectParam,
+        serverData.user?.email || serverData.user?.full_name
+      );
       router.push(targetRoute);
       router.refresh();
     } catch (err: unknown) {
@@ -140,7 +148,7 @@ function SignInContent() {
 
   const handleQuickDemoLogin = async (
     demoEmail: string,
-    targetRoute: '/dashboard' | '/caregiver',
+    targetRoute: '/dashboard' | '/caregiver' | '/doctor-brief',
     roleTag: string
   ) => {
     setError('');
@@ -310,7 +318,7 @@ function SignInContent() {
               type="button"
               disabled={quickLoginRole !== null}
               onClick={() =>
-                handleQuickDemoLogin('dr.patel.demo@gmail.com', '/caregiver', 'patel')
+                handleQuickDemoLogin('dr.patel.demo@gmail.com', '/doctor-brief', 'patel')
               }
               className="w-full text-left p-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border border-amber-200 text-slate-900 font-bold transition flex items-center justify-between group active:scale-98"
             >

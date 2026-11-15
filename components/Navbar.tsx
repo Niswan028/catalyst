@@ -93,6 +93,9 @@ export default function Navbar() {
     updated_at: new Date().toISOString(),
   };
 
+  const isClinician = isClinicianUser(activeUser);
+  const isFamily = isFamilyUser(activeUser);
+
   const navLinks =
     activeUser.role === 'elderly_user'
       ? [
@@ -105,6 +108,15 @@ export default function Navbar() {
           { href: '/demo', label: t.nav.tour, icon: Icons.Tour },
           { href: '/settings', label: t.nav.settings, icon: Icons.Settings },
         ]
+      : isClinician
+      ? [
+          { href: '/doctor-brief', label: 'Doctor Brief', icon: Icons.Activity },
+          { href: '/appointments', label: t.nav.appointments, icon: Icons.Appointments },
+          { href: '/caregiver', label: 'Care Circle', icon: Icons.Dashboard },
+          { href: '/messages', label: t.nav.messages, icon: Icons.Messages },
+          { href: '/demo', label: t.nav.tour, icon: Icons.Tour },
+          { href: '/settings', label: t.nav.settings, icon: Icons.Settings },
+        ]
       : [
           { href: '/caregiver', label: t.nav.dashboard, icon: Icons.Dashboard },
           { href: '/doctor-brief', label: 'Doctor Brief', icon: Icons.Activity },
@@ -113,9 +125,6 @@ export default function Navbar() {
           { href: '/demo', label: t.nav.tour, icon: Icons.Tour },
           { href: '/settings', label: t.nav.settings, icon: Icons.Settings },
         ];
-
-  const isClinician = isClinicianUser(activeUser);
-  const isFamily = isFamilyUser(activeUser);
 
   // Split links: Top 3 primary links visible on desktop header; remainder accessible via clean "More ▾" dropdown
   const primaryNavLinks = navLinks.slice(0, 3);

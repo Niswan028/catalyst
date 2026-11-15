@@ -19,7 +19,7 @@ export default function DemoGuidePage() {
 
   const handleQuickDemoLogin = async (
     demoEmail: string,
-    targetRoute: '/dashboard' | '/caregiver',
+    targetRoute: '/dashboard' | '/caregiver' | '/doctor-brief',
     roleTag: string
   ) => {
     setQuickLoginRole(roleTag);
@@ -237,7 +237,7 @@ export default function DemoGuidePage() {
               Receives missed-dose escalations • Monitors clinical schedules
             </p>
             <Button
-              onClick={() => handleQuickDemoLogin('dr.patel.demo@gmail.com', '/caregiver', 'patel')}
+              onClick={() => handleQuickDemoLogin('dr.patel.demo@gmail.com', '/doctor-brief', 'patel')}
               variant="secondary"
               className="w-full text-xs font-bold py-2"
               disabled={quickLoginRole !== null}

@@ -1,8 +1,9 @@
 // Caregiver Dashboard - Modular, Clean Architecture
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
@@ -17,9 +18,23 @@ import { CaregiverMedicationsTab } from '@/components/caregiver/CaregiverMedicat
 import { CaregiverCheckinsTab } from '@/components/caregiver/CaregiverCheckinsTab';
 import { CaregiverAlertsTab } from '@/components/caregiver/CaregiverAlertsTab';
 import { getErrorMessage } from '@/lib/errors';
+import { isClinicianUser } from '@/lib/permissions';
 
 export default function CaregiverDashboard() {
   const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) setCurrentUser(data.user);
+    });
+  }, []);
+
+  const isClinician = isClinicianUser({
+    email: currentUser?.email,
+    full_name: currentUser?.user_metadata?.full_name,
+    role: currentUser?.user_metadata?.role,
+  });
   const {
     loading,
     linkedUsers,
@@ -106,25 +121,39 @@ export default function CaregiverDashboard() {
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-[#e6dfd3] dark:border-stone-800 pb-5">
         <div>
           <span className="text-[11px] uppercase tracking-widest font-bold text-stone-500 dark:text-stone-400 block mb-1">
-            Passcode Access & Family Circles
+            {isClinician ? 'Clinical Care Circle Oversight' : 'Passcode Access & Family Circles'}
           </span>
           <h1 className="font-serif text-4xl sm:text-5xl font-normal text-stone-900 dark:text-stone-100 tracking-tight leading-tight">
-            Care Circle Hub
+            {isClinician ? 'Care Circle Overview' : 'Care Circle Hub'}
           </h1>
           <p className="text-sm text-stone-600 dark:text-stone-300 mt-1.5">
-            Monitor adherence trends, respond to stock refill alerts, and coordinate doctor visits.
+            {isClinician
+              ? 'Supervising clinical records, 7-day adherence trends, and patient appointments.'
+              : 'Monitor adherence trends, respond to stock refill alerts, and coordinate doctor visits.'}
           </p>
         </div>
         <div className="flex items-center gap-2.5 shrink-0">
-          <Button
-            onClick={() => setShowJoinPasscodeModal(true)}
-            className="bg-stone-900 hover:bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900 font-bold rounded-xl shadow-xs"
-          >
-            🔑 Join with Passcode
-          </Button>
-          <Button variant="secondary" onClick={() => setShowLinkForm(!showLinkForm)}>
-            {showLinkForm ? '✕ Close' : 'Email Link'}
-          </Button>
+          {isClinician ? (
+            <Link
+              href="/doctor-brief"
+              className="bg-stone-900 hover:bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900 font-bold px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-1.5 text-xs sm:text-sm"
+            >
+              <span>📋 Open Doctor Brief</span>
+              <span>→</span>
+            </Link>
+          ) : (
+            <>
+              <Button
+                onClick={() => setShowJoinPasscodeModal(true)}
+                className="bg-stone-900 hover:bg-stone-800 text-white dark:bg-stone-100 dark:text-stone-900 font-bold rounded-xl shadow-xs"
+              >
+                🔑 Join with Passcode
+              </Button>
+              <Button variant="secondary" onClick={() => setShowLinkForm(!showLinkForm)}>
+                {showLinkForm ? '✕ Close' : 'Email Link'}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -204,13 +233,15 @@ export default function CaregiverDashboard() {
                     >
                       💬 Send Message
                     </Button>
-                    <Button
-                      onClick={() => handleUnlinkUser(selectedUser.id)}
-                      variant="danger"
-                      size="sm"
-                    >
-                      Unlink
-                    </Button>
+                    {!isClinician && (
+                      <Button
+                        onClick={() => handleUnlinkUser(selectedUser.id)}
+                        variant="danger"
+                        size="sm"
+                      >
+                        Unlink
+                      </Button>
+                    )}
                   </div>
                 </div>
               </Card>
@@ -241,7 +272,7 @@ export default function CaregiverDashboard() {
 
               {/* Tab Panels */}
               {activeTab === 'overview' && (
-                <CaregiverOverviewTab userSummaries={userSummaries} />
+                <CaregiverOverviewTab userSummaries={userSummaries} isClinician={isClinician} />
               )}
 
               {activeTab === 'medications' && (

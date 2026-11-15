@@ -29,7 +29,7 @@ export const PERSONA_CONFIGS: Record<UserPersona, PersonaConfig> = {
     persona: 'caregiver',
     dbRole: 'caregiver',
     defaultCircleRole: 'clinician',
-    targetRoute: '/caregiver',
+    targetRoute: '/doctor-brief',
     badgeLabel: 'Clinician',
     description: 'Doctor, nurse, or professional aide overseeing clinical care.',
   },
@@ -58,10 +58,21 @@ export function mapPersonaToDbRole(persona: UserPersona | string): UserRole {
  */
 export function getPostAuthRedirect(
   role?: string | null,
-  redirectParam?: string | null
+  redirectParam?: string | null,
+  identifier?: string | null
 ): string {
   if (redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
     return redirectParam;
+  }
+  const idStr = (identifier || role || '').toLowerCase();
+  if (
+    idStr.includes('dr.patel') ||
+    idStr.includes('doctor') ||
+    idStr.includes('clinician') ||
+    idStr.startsWith('dr.') ||
+    idStr.includes(', md')
+  ) {
+    return '/doctor-brief';
   }
   if (role === 'elderly_user' || role === 'elder') {
     return '/dashboard';
