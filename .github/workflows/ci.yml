@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test-and-build:
+    name: Lint, Typecheck, Test & Build
+    runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://dummy-supabase-project.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy_anon_key_for_ci_pipeline_verification
+      SUPABASE_SERVICE_ROLE_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.dummy_service_role_key_for_ci_pipeline_verification
+      CRON_SECRET: test_ci_cron_secret_32_characters_long
+      RESEND_API_KEY: re_dummy_ci_key
+      EMAIL_FROM: CareConnect Alerts <alerts@careconnect.app>
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript typecheck
+        run: npx tsc --noEmit
+
+      - name: Run Unit & RLS Tests with Vitest
+        run: npm test
+
+      - name: Run Test Coverage
+        run: npx vitest run --coverage
+
+      - name: Build Next.js production bundle
+        run: npm run build

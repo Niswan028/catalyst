@@ -1,11 +1,17 @@
 import { describe, it, expect } from 'vitest';
-import { buildIdempotencyKey } from '../lib/email/reminderEngine';
+import {
+  buildIdempotencyKey,
+  isNotificationAlreadySent,
+  logNotificationSent,
+  processUpcomingDoseReminders,
+} from '../lib/email/reminderEngine';
 import {
   getUpcomingDoseEmail,
   getMissedDoseAlertEmail,
   getAppointmentReminderEmail,
   getWeeklyDigestEmail,
 } from '../lib/email/templates';
+import { sendEmail, getEmailTransporter } from '../lib/email/service';
 
 describe('Reminder Idempotency Key Generation', () => {
   it('generates deterministic idempotency keys', () => {
@@ -114,5 +120,76 @@ describe('Accessible Email Templates', () => {
     expect(digest.html).toContain('Eleanor');
     expect(digest.html).toContain('6');
     expect(digest.html).toContain('rule-based');
+  });
+
+  describe('Email Dispatcher Service', () => {
+    it('creates or reuses a transporter instance', () => {
+      const transporter = getEmailTransporter();
+      expect(transporter).toBeDefined();
+    });
+
+    it('successfully dispatches email using mock transporter fallback', async () => {
+      const result = await sendEmail({
+        to: 'elder@example.com',
+        subject: 'Upcoming Dose Reminder',
+        html: '<p>Time for your medication</p>',
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.messageId).toBeDefined();
+    });
+  });
+
+  describe('Notification Database Logging & Deduplication', () => {
+    it('checks if notification is already sent based on idempotency key', async () => {
+      const mockSupabase = {
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({ data: { id: 'notif-1' } }),
+            }),
+          }),
+        }),
+      } as any;
+
+      const sent = await isNotificationAlreadySent(mockSupabase, 'some-key');
+      expect(sent).toBe(true);
+
+      const mockSupabaseEmpty = {
+        from: () => ({
+          select: () => ({
+            eq: () => ({
+              maybeSingle: async () => ({ data: null }),
+            }),
+          }),
+        }),
+      } as any;
+
+      const notSent = await isNotificationAlreadySent(mockSupabaseEmpty, 'missing-key');
+      expect(notSent).toBe(false);
+    });
+
+    it('logs sent notification with normalized lowercase email', async () => {
+      let insertedPayload: any = null;
+      const mockSupabase = {
+        from: () => ({
+          insert: async (payload: any) => {
+            insertedPayload = payload;
+            return { error: null };
+          },
+        }),
+      } as any;
+
+      await logNotificationSent(mockSupabase, {
+        circleId: 'circle-123',
+        recipientEmail: 'Margaret.VANCE@example.com ',
+        type: 'upcoming_dose',
+        idempotencyKey: 'key-123',
+      });
+
+      expect(insertedPayload).toBeDefined();
+      expect(insertedPayload.recipient_email).toBe('margaret.vance@example.com');
+      expect(insertedPayload.idempotency_key).toBe('key-123');
+    });
   });
 });
