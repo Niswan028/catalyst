@@ -1,74 +1,77 @@
-// API route for voice messages
+// API route for voice messages with private storage and signed URLs
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getAuthenticatedContext, createServiceRoleClient } from '@/lib/supabase/authServer';
+import { logAuditEvent } from '@/lib/audit';
+import { z } from 'zod';
+
+const messageSchema = z.object({
+  recipient_id: z.string().uuid(),
+  duration_seconds: z.number().int().min(0).max(600).optional().nullable(),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    // Get auth token from header
-    const authHeader = request.headers.get('Authorization');
-    
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: authHeader ? { Authorization: authHeader } : {},
-        },
-      }
-    );
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await getAuthenticatedContext(request);
+    if ('error' in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+    const { user } = authResult;
+    const adminSupabase = createServiceRoleClient();
 
     const formData = await request.formData();
     const audioFile = formData.get('audio') as File;
-    const recipient_id = formData.get('recipient_id') as string;
-    const duration_seconds = parseInt(formData.get('duration_seconds') as string);
+    const rawRecipientId = formData.get('recipient_id') as string;
+    const rawDuration = formData.get('duration_seconds') as string;
 
-    if (!audioFile || !recipient_id) {
+    const validated = messageSchema.safeParse({
+      recipient_id: rawRecipientId,
+      duration_seconds: rawDuration ? parseInt(rawDuration, 10) : null,
+    });
+
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Audio file and recipient_id are required' },
+        { error: validated.error.issues?.[0]?.message || 'Invalid recipient or duration' },
         { status: 400 }
       );
     }
 
-    // Upload audio to Supabase Storage
-    const fileName = `${user.id}/${Date.now()}-${audioFile.name}`;
-    
-    console.log('Uploading file:', fileName, 'Type:', audioFile.type, 'Size:', audioFile.size);
-    
-    const { data: uploadData, error: uploadError } = await supabase.storage
+    if (!audioFile) {
+      return NextResponse.json({ error: 'Audio file is required' }, { status: 400 });
+    }
+
+    // Size limit: 10MB
+    if (audioFile.size > 10 * 1024 * 1024) {
+      return NextResponse.json({ error: 'Audio file must not exceed 10MB' }, { status: 400 });
+    }
+
+    // Upload audio to PRIVATE Supabase Storage
+    const fileExt = audioFile.name.split('.').pop() || 'webm';
+    const filePath = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+    const { error: uploadError } = await adminSupabase.storage
       .from('voice-messages')
-      .upload(fileName, audioFile, {
+      .upload(filePath, audioFile, {
         contentType: audioFile.type || 'audio/webm',
         upsert: false,
-        cacheControl: '3600',
       });
 
     if (uploadError) {
       return NextResponse.json({ error: uploadError.message }, { status: 400 });
     }
 
-    // Get public URL
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from('voice-messages').getPublicUrl(fileName);
+    // Generate short-lived signed URL (15 minutes = 900 seconds)
+    const { data: signedData, error: signedError } = await adminSupabase.storage
+      .from('voice-messages')
+      .createSignedUrl(filePath, 900);
 
-    // Save message metadata
-    const { data: messageData, error: messageError } = await supabase
+    // Save message metadata (stores storage relative path in audio_url)
+    const { data: messageData, error: messageError } = await adminSupabase
       .from('voice_messages')
       .insert({
         sender_id: user.id,
-        recipient_id,
-        audio_url: publicUrl,
-        duration_seconds: duration_seconds || null,
+        recipient_id: validated.data.recipient_id,
+        audio_url: filePath,
+        duration_seconds: validated.data.duration_seconds || null,
       })
       .select()
       .single();
@@ -77,96 +80,110 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: messageError.message }, { status: 400 });
     }
 
-    return NextResponse.json({
-      message: 'Voice message sent successfully',
-      voice_message: messageData,
+    await logAuditEvent(adminSupabase, {
+      actorId: user.id,
+      action: 'voice_message_sent',
+      resourceType: 'voice_messages',
+      resourceId: messageData.id,
+      details: { recipientId: validated.data.recipient_id },
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+
+    return NextResponse.json({
+      message: 'Voice message sent securely',
+      voice_message: {
+        ...messageData,
+        signed_url: signedData?.signedUrl,
+      },
+    }, { status: 201 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    // Get auth token from header
-    const authHeader = request.headers.get('Authorization');
-    
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: authHeader ? { Authorization: authHeader } : {},
-        },
-      }
-    );
+    const authResult = await getAuthenticatedContext(request);
+    if ('error' in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const { user } = authResult;
+    const adminSupabase = createServiceRoleClient();
 
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { searchParams } = new URL(request.url);
+    const otherUserId = searchParams.get('user_id');
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    let query = adminSupabase
+      .from('voice_messages')
+      .select('*, sender:users!voice_messages_sender_id_fkey(full_name, email), recipient:users!voice_messages_recipient_id_fkey(full_name, email)');
+
+    if (otherUserId) {
+      query = query.or(
+        `and(sender_id.eq.${user.id},recipient_id.eq.${otherUserId}),and(sender_id.eq.${otherUserId},recipient_id.eq.${user.id})`
+      );
+    } else {
+      query = query.or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`);
     }
 
-    // Get messages where user is sender or recipient
-    const { data, error } = await supabase
-      .from('voice_messages')
-      .select('*, sender:users!voice_messages_sender_id_fkey(id, full_name, email), recipient:users!voice_messages_recipient_id_fkey(id, full_name, email)')
-      .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-      .order('created_at', { ascending: false });
+    const { data: messages, error } = await query.order('created_at', { ascending: true });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ messages: data });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // Generate signed URLs for private audio playback
+    const messagesWithSignedUrls = await Promise.all(
+      (messages || []).map(async (msg) => {
+        let storagePath = msg.audio_url;
+        // If legacy full url was stored, extract path
+        if (storagePath.includes('voice-messages/')) {
+          storagePath = storagePath.split('voice-messages/')[1].split('?')[0];
+        }
+
+        try {
+          const { data: signed } = await adminSupabase.storage
+            .from('voice-messages')
+            .createSignedUrl(decodeURIComponent(storagePath), 900);
+
+          return {
+            ...msg,
+            signed_url: signed?.signedUrl || msg.audio_url,
+          };
+        } catch {
+          return {
+            ...msg,
+            signed_url: msg.audio_url,
+          };
+        }
+      })
+    );
+
+    return NextResponse.json({ messages: messagesWithSignedUrls });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function PATCH(request: NextRequest) {
   try {
-    // Get auth token from header
-    const authHeader = request.headers.get('Authorization');
-    
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: authHeader ? { Authorization: authHeader } : {},
-        },
-      }
-    );
+    const authResult = await getAuthenticatedContext(request);
+    if ('error' in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+    }
+    const { user } = authResult;
+    const adminSupabase = createServiceRoleClient();
 
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
+    const { message_id, is_read } = await request.json();
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (!message_id) {
+      return NextResponse.json({ error: 'message_id is required' }, { status: 400 });
     }
 
-    const { id, is_read } = await request.json();
-
-    if (!id || is_read === undefined) {
-      return NextResponse.json(
-        { error: 'Message ID and is_read are required' },
-        { status: 400 }
-      );
-    }
-
-    // Update message read status
-    const { data, error } = await supabase
+    const { data, error } = await adminSupabase
       .from('voice_messages')
-      .update({ is_read })
-      .eq('id', id)
+      .update({ is_read: is_read !== undefined ? is_read : true })
+      .eq('id', message_id)
       .eq('recipient_id', user.id)
       .select()
       .single();
@@ -175,12 +192,9 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({
-      message: 'Message updated successfully',
-      voice_message: data,
-    });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ message: 'Message updated', voice_message: data });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

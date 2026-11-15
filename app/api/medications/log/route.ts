@@ -1,52 +1,46 @@
-// API route for medication logs
+// API route for medication logs with Zod validation
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getAuthenticatedContext, createServiceRoleClient } from '@/lib/supabase/authServer';
+import { logMedicationSchema } from '@/lib/validations/medications';
+import { logAuditEvent } from '@/lib/audit';
 
 export async function POST(request: NextRequest) {
   try {
-    // Get auth token from header
-    const authHeader = request.headers.get('Authorization');
-    
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: authHeader ? { Authorization: authHeader } : {},
-        },
-      }
-    );
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await getAuthenticatedContext(request);
+    if ('error' in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+    const { user } = authResult;
+    const adminSupabase = createServiceRoleClient();
 
-    const { medication_id, status, scheduled_time } = await request.json();
-
-    // Validate input
-    if (!medication_id || !status || !scheduled_time) {
+    const body = await request.json();
+    const validated = logMedicationSchema.safeParse(body);
+    if (!validated.success) {
       return NextResponse.json(
-        { error: 'Medication ID, status, and scheduled_time are required' },
+        { error: validated.error.issues?.[0]?.message || 'Invalid log parameters' },
         { status: 400 }
       );
     }
 
-    if (!['taken', 'later', 'skipped'].includes(status)) {
-      return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+    const { medication_id, status, scheduled_time } = validated.data;
+
+    // Check medication exists
+    const { data: medication } = await adminSupabase
+      .from('medications')
+      .select('*')
+      .eq('id', medication_id)
+      .single();
+
+    if (!medication) {
+      return NextResponse.json({ error: 'Medication not found' }, { status: 404 });
     }
 
-    // Log medication
-    const { data: logData, error: logError } = await supabase
+    // Insert medication log
+    const { data: logData, error: logError } = await adminSupabase
       .from('medication_logs')
       .insert({
         medication_id,
-        user_id: user.id,
+        user_id: medication.user_id,
         status,
         scheduled_time,
       })
@@ -57,100 +51,88 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: logError.message }, { status: 400 });
     }
 
-    // If taken, reduce stock
-    if (status === 'taken') {
-      // Get current medication
-      const { data: medication, error: medError } = await supabase
-        .from('medications')
-        .select('*')
-        .eq('id', medication_id)
-        .single();
-
-      if (medError || !medication) {
-        return NextResponse.json({ error: 'Medication not found' }, { status: 404 });
-      }
-
+    // If taken, decrement stock by 1
+    if (status === 'taken' && medication.total_stock > 0) {
       const newStock = medication.total_stock - 1;
-
-      // Update stock
-      const { error: updateError } = await supabase
+      await adminSupabase
         .from('medications')
-        .update({ total_stock: newStock })
+        .update({ total_stock: newStock, updated_at: new Date().toISOString() })
         .eq('id', medication_id);
 
-      if (updateError) {
-        return NextResponse.json({ error: updateError.message }, { status: 400 });
-      }
-
-      // Check if stock is low
-      if (newStock <= medication.low_stock_threshold && newStock > 0) {
-        // Create stock alert
-        await supabase.from('stock_alerts').insert({
+      // Check if stock alert needed
+      if (newStock <= (medication.low_stock_threshold || 5)) {
+        await adminSupabase.from('stock_alerts').insert({
           medication_id,
-          user_id: user.id,
-          message: `Low stock alert: ${medication.name} has only ${newStock} doses remaining`,
+          user_id: medication.user_id,
+          message: `Low stock alert: ${medication.name} has only ${newStock} dose(s) remaining!`,
+          is_resolved: false,
         });
       }
     }
 
-    return NextResponse.json({
-      message: 'Medication logged successfully',
-      log: logData,
+    // Find circle for audit log
+    const { data: circle } = await adminSupabase
+      .from('care_circles')
+      .select('id')
+      .eq('elder_id', medication.user_id)
+      .maybeSingle();
+
+    await logAuditEvent(adminSupabase, {
+      circleId: circle?.id,
+      actorId: user.id,
+      action: 'medication_logged',
+      resourceType: 'medication_logs',
+      resourceId: logData.id,
+      details: {
+        medication: medication.name,
+        status,
+        scheduled_time,
+      },
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+
+    return NextResponse.json({
+      message: 'Medication log recorded successfully',
+      log: logData,
+    }, { status: 201 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
 export async function GET(request: NextRequest) {
   try {
-    // Get auth token from header
-    const authHeader = request.headers.get('Authorization');
-    
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: authHeader ? { Authorization: authHeader } : {},
-        },
-      }
-    );
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await getAuthenticatedContext(request);
+    if ('error' in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
+    const { user } = authResult;
+    const adminSupabase = createServiceRoleClient();
 
-    // Get query parameters
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('user_id') || user.id;
     const medicationId = searchParams.get('medication_id');
+    const limit = parseInt(searchParams.get('limit') || '30', 10);
 
-    let query = supabase
+    let query = adminSupabase
       .from('medication_logs')
-      .select('*')
-      .eq('user_id', userId)
-      .order('logged_at', { ascending: false });
+      .select('*, medication:medications(name, dosage, time)')
+      .order('logged_at', { ascending: false })
+      .limit(limit);
 
     if (medicationId) {
       query = query.eq('medication_id', medicationId);
+    } else {
+      query = query.eq('user_id', user.id);
     }
 
     const { data, error } = await query;
-
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ logs: data });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ logs: data || [] });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

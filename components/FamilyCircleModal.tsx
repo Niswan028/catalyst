@@ -20,11 +20,12 @@ export default function FamilyCircleModal({
   circleId: initialCircleId,
   circleName: initialCircleName,
 }: FamilyCircleModalProps) {
-  const [activeTab, setActiveTab] = useState<'members' | 'invite' | 'active_codes'>('members');
+  const [activeTab, setActiveTab] = useState<'members' | 'invite' | 'active_codes' | 'audit'>('members');
   const [circleId, setCircleId] = useState<string | null>(initialCircleId || null);
   const [circleName, setCircleName] = useState<string>(initialCircleName || 'Family Care Circle');
   const [members, setMembers] = useState<CircleMember[]>([]);
   const [activeInvites, setActiveInvites] = useState<InviteCode[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -83,6 +84,15 @@ export default function FamilyCircleModal({
         const invitesData = await invitesRes.json();
         if (invitesRes.ok) {
           setActiveInvites(invitesData.invites || []);
+        }
+
+        // Fetch audit logs
+        const auditRes = await fetch(`/api/circles/${targetCircleId}/audit`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const auditData = await auditRes.json();
+        if (auditRes.ok) {
+          setAuditLogs(auditData.audit_logs || []);
         }
       }
     } catch (err) {
@@ -304,6 +314,16 @@ export default function FamilyCircleModal({
           >
             Active Passcodes ({activeInvites.filter((i) => !i.is_revoked).length})
           </button>
+          <button
+            onClick={() => setActiveTab('audit')}
+            className={`pb-3 px-4 font-semibold text-sm transition-colors border-b-2 ${
+              activeTab === 'audit'
+                ? 'border-primary-600 text-primary-600'
+                : 'border-transparent text-gray-500 hover:text-gray-700'
+            }`}
+          >
+            🛡️ Audit Trail ({auditLogs.length})
+          </button>
         </div>
 
         {loading && <LoadingSpinner />}
@@ -524,6 +544,39 @@ export default function FamilyCircleModal({
                   </div>
                 );
               })
+            )}
+          </div>
+        )}
+
+        {/* TAB 4: AUDIT TRAIL */}
+        {!loading && activeTab === 'audit' && (
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {auditLogs.length === 0 ? (
+              <p className="text-gray-500 text-center py-6">No security events logged yet.</p>
+            ) : (
+              auditLogs.map((log: any) => (
+                <div
+                  key={log.id}
+                  className="p-3.5 border rounded-xl bg-gray-50 text-xs flex flex-col gap-1"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold uppercase tracking-wider text-primary-700 bg-primary-50 px-2 py-0.5 rounded border border-primary-200">
+                      {log.action.replace(/_/g, ' ')}
+                    </span>
+                    <span className="text-gray-400">
+                      {new Date(log.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-gray-700 mt-1">
+                    <strong>Actor:</strong> {log.actor?.full_name || log.actor?.email || 'System / Elder'}
+                  </p>
+                  {log.details && (
+                    <p className="text-gray-500 font-mono text-[11px] bg-white p-2 rounded border mt-1">
+                      {JSON.stringify(log.details)}
+                    </p>
+                  )}
+                </div>
+              ))
             )}
           </div>
         )}

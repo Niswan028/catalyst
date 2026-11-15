@@ -319,7 +319,7 @@ export default function MessagesPage() {
 
                   <audio
                     controls
-                    src={message.audio_url}
+                    src={message.signed_url || message.audio_url}
                     className="w-full mt-2"
                     preload="metadata"
                     crossOrigin="anonymous"
