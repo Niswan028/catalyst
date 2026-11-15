@@ -44,28 +44,43 @@ export async function POST(request: NextRequest) {
     }
 
     const { email, password, full_name, role } = validated.data;
-    const supabase = createServerClient();
+    const adminSupabase = createServiceRoleClient();
 
-    // Create auth user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Create auth user with auto-confirmed email for instant access
+    let userId: string;
+    let userEmail: string;
+
+    const { data: adminUser, error: adminError } = await adminSupabase.auth.admin.createUser({
       email,
       password,
+      email_confirm: true,
+      user_metadata: { role, full_name },
     });
 
-    if (authError) {
-      recordFailedAttempt(rateLimitKey, AUTH_RATE_LIMIT_CONFIG);
-      return NextResponse.json({ error: authError.message }, { status: 400 });
-    }
+    if (adminError) {
+      // Fallback to standard signUp
+      const supabase = createServerClient();
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+      });
 
-    if (!authData.user) {
-      return NextResponse.json({ error: 'Failed to create user' }, { status: 400 });
+      if (authError || !authData.user) {
+        recordFailedAttempt(rateLimitKey, AUTH_RATE_LIMIT_CONFIG);
+        return NextResponse.json({ error: authError?.message || adminError.message }, { status: 400 });
+      }
+
+      userId = authData.user.id;
+      userEmail = authData.user.email || email;
+    } else {
+      userId = adminUser.user.id;
+      userEmail = adminUser.user.email || email;
     }
 
     // Create user profile using service role to initialize profile
-    const adminSupabase = createServiceRoleClient();
-    const { error: profileError } = await adminSupabase.from('users').insert({
-      id: authData.user.id,
-      email,
+    const { error: profileError } = await adminSupabase.from('users').upsert({
+      id: userId,
+      email: userEmail,
       role,
       full_name: full_name || null,
     });
@@ -77,8 +92,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: 'User created successfully',
       user: {
-        id: authData.user.id,
-        email: authData.user.email,
+        id: userId,
+        email: userEmail,
         role,
         full_name,
       },
