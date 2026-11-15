@@ -264,7 +264,7 @@ export default function DashboardPage() {
                 <div className="text-4xl mb-2">🎤</div>
                 <h3 className="text-lg font-semibold mb-2">Daily Check-In</h3>
                 <p className="text-gray-600 text-sm mb-4">
-                  Share how you're feeling today
+                  Share how you&apos;re feeling today
                 </p>
                 <Button onClick={() => router.push('/checkin')} className="w-full">
                   Start Check-In

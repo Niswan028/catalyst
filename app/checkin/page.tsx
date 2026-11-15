@@ -242,7 +242,7 @@ export default function CheckInPage() {
                 </div>
                 {isSpeaking ? (
                   <p className="text-xl text-primary-700 font-bold mb-4">
-                    🔊 "Hello, how are you feeling today?"
+                    🔊 &quot;Hello, how are you feeling today?&quot;
                   </p>
                 ) : (
                   <>

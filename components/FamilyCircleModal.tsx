@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 import LoadingSpinner from '@/components/LoadingSpinner';
@@ -37,13 +37,7 @@ export default function FamilyCircleModal({
   const [generatedPasscode, setGeneratedPasscode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
-  useEffect(() => {
-    if (isOpen) {
-      loadCircleAndMembers();
-    }
-  }, [isOpen, initialCircleId]);
-
-  const loadCircleAndMembers = async () => {
+  const loadCircleAndMembers = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -101,7 +95,13 @@ export default function FamilyCircleModal({
     } finally {
       setLoading(false);
     }
-  };
+  }, [circleId, initialCircleId]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadCircleAndMembers();
+    }
+  }, [isOpen, loadCircleAndMembers]);
 
   const handleGeneratePasscode = async () => {
     if (!circleId) return;

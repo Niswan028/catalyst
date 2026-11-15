@@ -264,7 +264,7 @@ export default function MessagesPage() {
           <div className="text-center py-8">
             <div className="text-6xl mb-4">👥</div>
             <p className="text-gray-600 mb-4">
-              You haven't linked any elderly users yet.
+              You haven&apos;t linked any elderly users yet.
             </p>
             <p className="text-gray-500 text-sm">
               Contact your administrator to link elderly users to your account.

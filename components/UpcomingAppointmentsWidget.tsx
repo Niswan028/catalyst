@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
@@ -23,11 +23,7 @@ export default function UpcomingAppointmentsWidget({
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchAppointments();
-  }, [circleId]);
-
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
       const {
         data: { session },
@@ -50,7 +46,11 @@ export default function UpcomingAppointmentsWidget({
     } finally {
       setLoading(false);
     }
-  };
+  }, [circleId]);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
 
   const handleMarkDone = async (id: string) => {
     try {

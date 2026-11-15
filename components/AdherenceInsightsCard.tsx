@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Card from '@/components/Card';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { supabase } from '@/lib/supabase/client';
@@ -14,11 +14,7 @@ export default function AdherenceInsightsCard({ userId }: AdherenceInsightsCardP
   const [insight, setInsight] = useState<AdherenceInsight | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchInsights();
-  }, [userId]);
-
-  const fetchInsights = async () => {
+  const fetchInsights = useCallback(async () => {
     try {
       const {
         data: { session },
@@ -41,7 +37,11 @@ export default function AdherenceInsightsCard({ userId }: AdherenceInsightsCardP
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchInsights();
+  }, [fetchInsights]);
 
   if (loading) {
     return (

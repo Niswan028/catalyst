@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Card from '@/components/Card';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { supabase } from '@/lib/supabase/client';
@@ -15,11 +15,7 @@ export default function RefillPredictionWidget({ userId }: RefillPredictionWidge
   const [predictions, setPredictions] = useState<RefillPrediction[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchRefillPredictions();
-  }, [userId]);
-
-  const fetchRefillPredictions = async () => {
+  const fetchRefillPredictions = useCallback(async () => {
     try {
       const {
         data: { session },
@@ -42,7 +38,11 @@ export default function RefillPredictionWidget({ userId }: RefillPredictionWidge
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    fetchRefillPredictions();
+  }, [fetchRefillPredictions]);
 
   if (loading) {
     return (

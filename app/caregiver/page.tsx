@@ -92,6 +92,7 @@ export default function CaregiverDashboard() {
   useEffect(() => {
     fetchLinkedUsers();
     fetchAlerts();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -398,7 +399,7 @@ export default function CaregiverDashboard() {
         <Card title="Link to Elderly User">
           <p className="text-gray-600 mb-4">
             Enter the email address of the elderly user you want to monitor. 
-            They must have already signed up as an "Elderly User".
+            They must have already signed up as an &quot;Elderly User&quot;.
           </p>
           <form onSubmit={handleLinkUser} className="flex gap-4">
             <div className="flex-1">

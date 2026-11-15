@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Medication, User } from '@/lib/types';
 import { supabase } from '@/lib/supabase/client';
@@ -22,6 +22,21 @@ export default function EasyModeView({
   const [activeMedication, setActiveMedication] = useState<Medication | null>(null);
   const [loggedSuccess, setLoggedSuccess] = useState(false);
   const [voiceSpeaking, setVoiceSpeaking] = useState(false);
+
+  const speakPrompt = useCallback(
+    (med: Medication) => {
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const text = `Hello ${user.full_name || ''}. Your dose of ${med.name}, ${med.dosage}, is scheduled for ${med.time}. Tap the large green button when taken.`;
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9; // Slightly slower for elderly clarity
+        utterance.onstart = () => setVoiceSpeaking(true);
+        utterance.onend = () => setVoiceSpeaking(false);
+        window.speechSynthesis.speak(utterance);
+      }
+    },
+    [user.full_name]
+  );
 
   useEffect(() => {
     // Determine the next or current medication
@@ -49,19 +64,7 @@ export default function EasyModeView({
       // Play voice announcement if available
       speakPrompt(nextMed);
     }
-  }, [medications]);
-
-  const speakPrompt = (med: Medication) => {
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const text = `Hello ${user.full_name || ''}. Your dose of ${med.name}, ${med.dosage}, is scheduled for ${med.time}. Tap the large green button when taken.`;
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9; // Slightly slower for elderly clarity
-      utterance.onstart = () => setVoiceSpeaking(true);
-      utterance.onend = () => setVoiceSpeaking(false);
-      window.speechSynthesis.speak(utterance);
-    }
-  };
+  }, [medications, speakPrompt]);
 
   const handleOneTapTake = async () => {
     if (!activeMedication) return;

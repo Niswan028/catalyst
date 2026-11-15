@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
@@ -30,17 +30,7 @@ export default function AppointmentsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [formLoading, setFormLoading] = useState(false);
 
-  useEffect(() => {
-    fetchUserAndAppointments();
-  }, [activeFilter]);
-
-  useEffect(() => {
-    if (searchParams.get('action') === 'new') {
-      openCreateModal();
-    }
-  }, [searchParams]);
-
-  const fetchUserAndAppointments = async () => {
+  const fetchUserAndAppointments = useCallback(async () => {
     try {
       const {
         data: { session },
@@ -75,7 +65,17 @@ export default function AppointmentsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeFilter, router]);
+
+  useEffect(() => {
+    fetchUserAndAppointments();
+  }, [fetchUserAndAppointments]);
+
+  useEffect(() => {
+    if (searchParams.get('action') === 'new') {
+      openCreateModal();
+    }
+  }, [searchParams]);
 
   const openCreateModal = () => {
     setEditingAppointment(null);
