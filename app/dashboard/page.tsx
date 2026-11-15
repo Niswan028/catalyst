@@ -11,6 +11,9 @@ import { User, DailySummary, Medication, StockAlert } from '@/lib/types';
 import { format } from 'date-fns';
 import FamilyCircleModal from '@/components/FamilyCircleModal';
 import UpcomingAppointmentsWidget from '@/components/UpcomingAppointmentsWidget';
+import EasyModeView from '@/components/EasyModeView';
+import AdherenceInsightsCard from '@/components/AdherenceInsightsCard';
+import RefillPredictionWidget from '@/components/RefillPredictionWidget';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -20,87 +23,92 @@ export default function DashboardPage() {
   const [medications, setMedications] = useState<Medication[]>([]);
   const [alerts, setAlerts] = useState<StockAlert[]>([]);
   const [showCircleModal, setShowCircleModal] = useState(false);
+  const [isEasyMode, setIsEasyMode] = useState(false);
+
+  const fetchData = async (authUser: any) => {
+    try {
+      // Fetch user profile
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (userError && userError.code === 'PGRST116') {
+        // User profile doesn't exist, create it
+        const { data: newUser, error: createError } = await supabase
+          .from('users')
+          .insert({
+            id: authUser.id,
+            email: authUser.email!,
+            role: 'elderly_user',
+            full_name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || null,
+          })
+          .select()
+          .single();
+        
+        if (!createError) {
+          setUser(newUser);
+        }
+      } else if (userData) {
+        setUser(userData);
+      }
+
+      const currentUser = userData || { role: 'elderly_user' };
+
+      if (currentUser?.role === 'elderly_user') {
+        // Fetch today's summary
+        const today = format(new Date(), 'yyyy-MM-dd');
+        const { data: summaryData } = await supabase
+          .from('daily_summaries')
+          .select('*')
+          .eq('user_id', authUser.id)
+          .eq('date', today)
+          .single();
+
+        setSummary(summaryData);
+
+        // Fetch medications
+        const { data: medsData } = await supabase
+          .from('medications')
+          .select('*')
+          .eq('user_id', authUser.id)
+          .eq('is_active', true)
+          .order('time');
+
+        setMedications(medsData || []);
+
+        // Fetch unresolved alerts
+        const { data: alertsData } = await supabase
+          .from('stock_alerts')
+          .select('*, medication:medications(*)')
+          .eq('user_id', authUser.id)
+          .eq('is_resolved', false)
+          .order('created_at', { ascending: false });
+
+        setAlerts(alertsData || []);
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setIsEasyMode(localStorage.getItem('careconnect_easy_mode') === 'true');
+    }
+  }, []);
 
   useEffect(() => {
     let isMounted = true;
-
-    const fetchData = async (authUser: any) => {
-      if (!isMounted) return;
-      
-      try {
-        // Fetch user profile
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('id', authUser.id)
-          .single();
-
-        if (userError && userError.code === 'PGRST116') {
-          // User profile doesn't exist, create it
-          const { data: newUser, error: createError } = await supabase
-            .from('users')
-            .insert({
-              id: authUser.id,
-              email: authUser.email!,
-              role: 'elderly_user',
-              full_name: authUser.user_metadata?.full_name || authUser.user_metadata?.name || null,
-            })
-            .select()
-            .single();
-          
-          if (!createError && isMounted) {
-            setUser(newUser);
-          }
-        } else if (userData && isMounted) {
-          setUser(userData);
-        }
-
-        const currentUser = userData || { role: 'elderly_user' };
-
-        if (currentUser?.role === 'elderly_user' && isMounted) {
-          // Fetch today's summary
-          const today = format(new Date(), 'yyyy-MM-dd');
-          const { data: summaryData } = await supabase
-            .from('daily_summaries')
-            .select('*')
-            .eq('user_id', authUser.id)
-            .eq('date', today)
-            .single();
-
-          if (isMounted) setSummary(summaryData);
-
-          // Fetch medications
-          const { data: medsData } = await supabase
-            .from('medications')
-            .select('*')
-            .eq('user_id', authUser.id)
-            .eq('is_active', true)
-            .order('time');
-
-          if (isMounted) setMedications(medsData || []);
-
-          // Fetch unresolved alerts
-          const { data: alertsData } = await supabase
-            .from('stock_alerts')
-            .select('*, medication:medications(*)')
-            .eq('user_id', authUser.id)
-            .eq('is_resolved', false)
-            .order('created_at', { ascending: false });
-
-          if (isMounted) setAlerts(alertsData || []);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
 
     const initAuth = async () => {
       // First try to get session
       const { data: { session } } = await supabase.auth.getSession();
       
-      if (session?.user) {
+      if (session?.user && isMounted) {
         fetchData(session.user);
         return;
       }
@@ -110,9 +118,9 @@ export default function DashboardPage() {
         async (event, session) => {
           console.log('Dashboard auth event:', event, session?.user?.email);
           
-          if (session?.user) {
+          if (session?.user && isMounted) {
             fetchData(session.user);
-          } else if (event === 'SIGNED_OUT') {
+          } else if (event === 'SIGNED_OUT' && isMounted) {
             router.push('/auth/signin');
           }
         }
@@ -121,7 +129,7 @@ export default function DashboardPage() {
       // Wait a moment and check again
       setTimeout(async () => {
         const { data: { session: retrySession } } = await supabase.auth.getSession();
-        if (retrySession?.user) {
+        if (retrySession?.user && isMounted) {
           fetchData(retrySession.user);
         } else {
           // No session after waiting, redirect to signin
@@ -155,20 +163,52 @@ export default function DashboardPage() {
 
   if (!user) return null;
 
+  if (isEasyMode && user.role === 'elderly_user') {
+    return (
+      <EasyModeView
+        user={user}
+        medications={medications}
+        onExitEasyMode={() => {
+          setIsEasyMode(false);
+          localStorage.setItem('careconnect_easy_mode', 'false');
+        }}
+        onMedicationLogged={() => {
+          supabase.auth.getUser().then(({ data }) => {
+            if (data?.user) fetchData(data.user);
+          });
+        }}
+      />
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold text-gray-800">
           Welcome back, {user.full_name || user.email}!
         </h1>
         {user.role === 'elderly_user' && (
-          <Button
-            variant="secondary"
-            onClick={() => setShowCircleModal(true)}
-            className="flex items-center gap-2 border border-primary-300 hover:bg-primary-50"
-          >
-            👥 Family Care Circle
-          </Button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                const next = !isEasyMode;
+                setIsEasyMode(next);
+                localStorage.setItem('careconnect_easy_mode', String(next));
+              }}
+              className="px-4 py-2 rounded-xl text-sm font-bold bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 shadow-sm transition-transform active:scale-95 flex items-center gap-1.5"
+              aria-label="Switch to Easy Mode for larger text and simplified actions"
+            >
+              <span>👓</span>
+              <span>Easy Mode</span>
+            </button>
+            <Button
+              variant="secondary"
+              onClick={() => setShowCircleModal(true)}
+              className="flex items-center gap-2 border border-primary-300 hover:bg-primary-50"
+            >
+              👥 Family Care Circle
+            </Button>
+          </div>
         )}
       </div>
 
@@ -318,6 +358,12 @@ export default function DashboardPage() {
               </div>
             </Card>
           )}
+
+          {/* Adherence Insights & Refill Predictions */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <AdherenceInsightsCard />
+            <RefillPredictionWidget />
+          </div>
         </>
       ) : (
         <>

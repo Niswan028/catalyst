@@ -11,6 +11,8 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { format } from 'date-fns';
 import JoinCircleModal from '@/components/JoinCircleModal';
 import UpcomingAppointmentsWidget from '@/components/UpcomingAppointmentsWidget';
+import AdherenceInsightsCard from '@/components/AdherenceInsightsCard';
+import RefillPredictionWidget from '@/components/RefillPredictionWidget';
 
 interface LinkedUser {
   id: string;
@@ -593,6 +595,12 @@ export default function CaregiverDashboard() {
                       </div>
                     )}
                   </Card>
+
+                  {/* Pattern Detector & Smart Adherence */}
+                  <AdherenceInsightsCard userId={selectedUser.elderly_user.id} />
+
+                  {/* Refill Predictions */}
+                  <RefillPredictionWidget userId={selectedUser.elderly_user.id} />
 
                   {/* Adherence Report */}
                   <Card title="Medication Adherence Report">

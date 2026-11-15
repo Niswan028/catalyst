@@ -1,60 +1,42 @@
 // API route for caregiver to view linked user check-ins
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getAuthenticatedContext, createServiceRoleClient } from '@/lib/supabase/authServer';
+import { checkElderPrivacyPermission } from '@/lib/permissions';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get auth token from header
-    const authHeader = request.headers.get('Authorization');
-    
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: authHeader ? { Authorization: authHeader } : {},
-        },
-      }
-    );
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await getAuthenticatedContext(request);
+    if ('error' in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
-
+    const { user } = authResult;
     const { searchParams } = new URL(request.url);
     const elderlyUserId = searchParams.get('user_id');
-    const limit = parseInt(searchParams.get('limit') || '20');
+    const limit = parseInt(searchParams.get('limit') || '20', 10);
 
     if (!elderlyUserId) {
-      return NextResponse.json(
-        { error: 'user_id is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'user_id is required' }, { status: 400 });
     }
 
-    // Verify caregiver is linked to this user
-    const { data: link } = await supabase
-      .from('caregiver_links')
-      .select('id')
-      .eq('caregiver_id', user.id)
-      .eq('elderly_user_id', elderlyUserId)
-      .single();
+    const adminSupabase = createServiceRoleClient();
 
-    if (!link) {
+    // Verify elder privacy permissions
+    const perm = await checkElderPrivacyPermission(
+      adminSupabase,
+      user.id,
+      elderlyUserId,
+      'health_checkins'
+    );
+
+    if (!perm.allowed) {
       return NextResponse.json(
-        { error: 'You are not authorized to view this user\'s check-ins' },
+        { error: perm.reason || 'You are not authorized to view this user’s check-ins' },
         { status: 403 }
       );
     }
 
     // Fetch check-ins
-    const { data: checkins, error } = await supabase
+    const { data: checkins, error } = await adminSupabase
       .from('health_checkins')
       .select('*')
       .eq('user_id', elderlyUserId)
@@ -66,8 +48,8 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json({ checkins: checkins || [] });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-

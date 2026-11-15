@@ -1,55 +1,37 @@
 // API route for caregiver to view medication adherence reports
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { getAuthenticatedContext, createServiceRoleClient } from '@/lib/supabase/authServer';
+import { checkElderPrivacyPermission } from '@/lib/permissions';
 import { startOfWeek, endOfWeek, startOfMonth, endOfMonth, format } from 'date-fns';
 
 export async function GET(request: NextRequest) {
   try {
-    // Get auth token from header
-    const authHeader = request.headers.get('Authorization');
-    
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        global: {
-          headers: authHeader ? { Authorization: authHeader } : {},
-        },
-      }
-    );
-
-    // Get authenticated user
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    const authResult = await getAuthenticatedContext(request);
+    if ('error' in authResult) {
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
-
+    const { user } = authResult;
     const { searchParams } = new URL(request.url);
     const elderlyUserId = searchParams.get('user_id');
     const period = searchParams.get('period') || 'week'; // 'week' or 'month'
 
     if (!elderlyUserId) {
-      return NextResponse.json(
-        { error: 'user_id is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'user_id is required' }, { status: 400 });
     }
 
-    // Verify caregiver is linked to this user
-    const { data: link } = await supabase
-      .from('caregiver_links')
-      .select('id')
-      .eq('caregiver_id', user.id)
-      .eq('elderly_user_id', elderlyUserId)
-      .single();
+    const adminSupabase = createServiceRoleClient();
 
-    if (!link) {
+    // Verify elder privacy permissions
+    const perm = await checkElderPrivacyPermission(
+      adminSupabase,
+      user.id,
+      elderlyUserId,
+      'medications'
+    );
+
+    if (!perm.allowed) {
       return NextResponse.json(
-        { error: 'You are not authorized to view this user\'s data' },
+        { error: perm.reason || 'You are not authorized to view this user’s adherence data' },
         { status: 403 }
       );
     }
@@ -63,18 +45,29 @@ export async function GET(request: NextRequest) {
       startDate = startOfMonth(now);
       endDate = endOfMonth(now);
     } else {
-      startDate = startOfWeek(now);
-      endDate = endOfWeek(now);
+      startDate = startOfWeek(now, { weekStartsOn: 1 });
+      endDate = endOfWeek(now, { weekStartsOn: 1 });
     }
 
-    // Fetch medication logs for the period
-    const { data: logs, error: logsError } = await supabase
+    // Fetch active medications
+    const { data: medications, error: medsError } = await adminSupabase
+      .from('medications')
+      .select('*')
+      .eq('user_id', elderlyUserId)
+      .eq('is_active', true);
+
+    if (medsError) {
+      return NextResponse.json({ error: medsError.message }, { status: 400 });
+    }
+
+    // Fetch medication logs in date range
+    const { data: logs, error: logsError } = await adminSupabase
       .from('medication_logs')
       .select('*, medication:medications(*)')
       .eq('user_id', elderlyUserId)
-      .gte('logged_at', startDate.toISOString())
-      .lte('logged_at', endDate.toISOString())
-      .order('logged_at', { ascending: false });
+      .gte('scheduled_time', startDate.toISOString())
+      .lte('scheduled_time', endDate.toISOString())
+      .order('scheduled_time', { ascending: false });
 
     if (logsError) {
       return NextResponse.json({ error: logsError.message }, { status: 400 });
@@ -82,36 +75,25 @@ export async function GET(request: NextRequest) {
 
     // Calculate adherence statistics
     const totalLogs = logs?.length || 0;
-    const takenCount = logs?.filter((log: any) => log.status === 'taken').length || 0;
-    const skippedCount = logs?.filter((log: any) => log.status === 'skipped').length || 0;
-    const laterCount = logs?.filter((log: any) => log.status === 'later').length || 0;
+    const takenLogs = logs?.filter((l) => l.status === 'taken').length || 0;
+    const skippedLogs = logs?.filter((l) => l.status === 'skipped').length || 0;
+    const laterLogs = logs?.filter((l) => l.status === 'later').length || 0;
 
-    const adherenceRate = totalLogs > 0 ? (takenCount / totalLogs) * 100 : 0;
+    const overallRate = totalLogs > 0 ? (takenLogs / totalLogs) * 100 : 0;
 
-    // Calculate per-medication adherence
-    const medicationStats: Record<string, any> = {};
+    // Per-medication stats
+    const byMedication = (medications || []).map((med) => {
+      const medLogs = logs?.filter((l) => l.medication_id === med.id) || [];
+      const medTaken = medLogs.filter((l) => l.status === 'taken').length;
+      const medTotal = medLogs.length;
+      const adherenceRate = medTotal > 0 ? (medTaken / medTotal) * 100 : 0;
 
-    logs?.forEach((log: any) => {
-      const medId = log.medication_id;
-      if (!medicationStats[medId]) {
-        medicationStats[medId] = {
-          medication: log.medication,
-          total: 0,
-          taken: 0,
-          skipped: 0,
-          later: 0,
-          adherenceRate: 0,
-        };
-      }
-      medicationStats[medId].total++;
-      if (log.status === 'taken') medicationStats[medId].taken++;
-      if (log.status === 'skipped') medicationStats[medId].skipped++;
-      if (log.status === 'later') medicationStats[medId].later++;
-    });
-
-    // Calculate adherence rate for each medication
-    Object.values(medicationStats).forEach((stat: any) => {
-      stat.adherenceRate = stat.total > 0 ? (stat.taken / stat.total) * 100 : 0;
+      return {
+        medication: med,
+        totalLogs: medTotal,
+        takenCount: medTaken,
+        adherenceRate,
+      };
     });
 
     return NextResponse.json({
@@ -120,16 +102,15 @@ export async function GET(request: NextRequest) {
       endDate: format(endDate, 'yyyy-MM-dd'),
       overall: {
         totalLogs,
-        takenCount,
-        skippedCount,
-        laterCount,
-        adherenceRate: adherenceRate.toFixed(1),
+        takenCount: takenLogs,
+        skippedCount: skippedLogs,
+        laterCount: laterLogs,
+        adherenceRate: overallRate,
       },
-      byMedication: Object.values(medicationStats),
-      recentLogs: logs?.slice(0, 20) || [],
+      byMedication,
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Internal server error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
-
