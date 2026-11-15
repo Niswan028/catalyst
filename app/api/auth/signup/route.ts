@@ -58,31 +58,64 @@ export async function POST(request: NextRequest) {
     });
 
     if (adminError) {
-      // Fallback to standard signUp
-      const supabase = createServerClient();
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
+      const isAlreadyRegistered =
+        adminError.message.toLowerCase().includes('already been registered') ||
+        adminError.message.toLowerCase().includes('already registered');
 
-      if (authError || !authData.user) {
-        recordFailedAttempt(rateLimitKey, AUTH_RATE_LIMIT_CONFIG);
-        return NextResponse.json({ error: authError?.message || adminError.message }, { status: 400 });
+      if (isAlreadyRegistered) {
+        // Find existing user in auth.admin to sync profile and password
+        const { data: listData } = await adminSupabase.auth.admin.listUsers();
+        const existing = listData?.users?.find(
+          (u) => u.email?.toLowerCase() === email.toLowerCase()
+        );
+
+        if (existing) {
+          userId = existing.id;
+          userEmail = existing.email || email;
+          // Update password and metadata and auto-confirm email so the user can immediately sign in
+          await adminSupabase.auth.admin.updateUserById(existing.id, {
+            password,
+            email_confirm: true,
+            user_metadata: { role, full_name },
+          });
+        } else {
+          recordFailedAttempt(rateLimitKey, AUTH_RATE_LIMIT_CONFIG);
+          return NextResponse.json(
+            { error: 'An account with this email is already registered. Please sign in.' },
+            { status: 400 }
+          );
+        }
+      } else {
+        // Fallback to standard signUp
+        const supabase = createServerClient();
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+        if (authError || !authData.user) {
+          recordFailedAttempt(rateLimitKey, AUTH_RATE_LIMIT_CONFIG);
+          return NextResponse.json(
+            { error: authError?.message || adminError.message },
+            { status: 400 }
+          );
+        }
+
+        userId = authData.user.id;
+        userEmail = authData.user.email || email;
       }
-
-      userId = authData.user.id;
-      userEmail = authData.user.email || email;
     } else {
       userId = adminUser.user.id;
       userEmail = adminUser.user.email || email;
     }
 
-    // Create user profile using service role to initialize profile
+    // Create user profile using service role to initialize profile (bypasses RLS)
     const { error: profileError } = await adminSupabase.from('users').upsert({
       id: userId,
       email: userEmail,
       role,
       full_name: full_name || null,
+      updated_at: new Date().toISOString(),
     });
 
     if (profileError) {
