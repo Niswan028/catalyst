@@ -53,21 +53,47 @@ export default function SignInPage() {
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // 1. Authenticate via resilient server route (immune to browser ad-blockers & CORS)
+      const res = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (error) throw error;
+      const data = await res.json();
 
-      if (data?.session) {
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to sign in');
+      }
+
+      // 2. Synchronize session with browser Supabase client
+      if (data.session) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
         document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
       }
 
-      router.push('/dashboard');
+      const targetRoute = data.user?.role === 'caregiver' ? '/caregiver' : '/dashboard';
+      router.push(targetRoute);
       router.refresh();
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign in');
+    } catch (err: any) {
+      // 3. Fallback to direct client call if server API is somehow unreachable
+      try {
+        const { data: fallbackData, error: fallbackError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (fallbackError) throw fallbackError;
+        if (fallbackData?.session) {
+          document.cookie = `sb-access-token=${fallbackData.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
+        }
+        router.push('/dashboard');
+        router.refresh();
+      } catch (finalErr: any) {
+        setError(err.message || finalErr.message || 'Failed to sign in');
+      }
     } finally {
       setLoading(false);
     }
@@ -81,21 +107,49 @@ export default function SignInPage() {
     setError('');
     setQuickLoginRole(roleTag);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: demoEmail,
-        password: 'Password123!Secure',
+      // 1. Authenticate via resilient server route (immune to browser ad-blockers & CORS)
+      const res = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: demoEmail,
+          password: 'Password123!Secure',
+        }),
       });
 
-      if (error) throw error;
+      const data = await res.json();
 
-      if (data?.session) {
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to sign in');
+      }
+
+      // 2. Synchronize session with browser Supabase client
+      if (data.session) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
         document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
       }
 
       router.push(targetRoute);
       router.refresh();
     } catch (err: any) {
-      setError(err.message || 'Failed to sign in with demo account');
+      // 3. Fallback to direct client authentication
+      try {
+        const { data: fallbackData, error: fallbackError } = await supabase.auth.signInWithPassword({
+          email: demoEmail,
+          password: 'Password123!Secure',
+        });
+        if (fallbackError) throw fallbackError;
+        if (fallbackData?.session) {
+          document.cookie = `sb-access-token=${fallbackData.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
+        }
+        router.push(targetRoute);
+        router.refresh();
+      } catch (finalErr: any) {
+        setError(err.message || finalErr.message || 'Failed to sign in with demo account');
+      }
     } finally {
       setQuickLoginRole(null);
     }

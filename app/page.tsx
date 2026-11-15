@@ -19,14 +19,25 @@ export default function HomePage() {
           : 'marcus.caregiver.demo@gmail.com';
       const password = 'Password123!Secure';
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // 1. Resilient server authentication
+      const res = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (error) throw error;
+      const data = await res.json();
 
-      if (data?.session) {
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to sign in');
+      }
+
+      // 2. Synchronize session with browser client
+      if (data.session) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
         document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
       }
 
