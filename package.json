@@ -38,7 +38,7 @@
     "@vitest/coverage-v8": "^5.1.0",
     "autoprefixer": "^10.4.17",
     "axe-core": "^4.14.0",
-    "eslint": "^8.57.1",
+    "eslint": "^10.14.0",
     "eslint-config-next": "^14.2.0",
     "eslint-plugin-react": "^7.33.2",
     "jsdom": "^31.0.1",
