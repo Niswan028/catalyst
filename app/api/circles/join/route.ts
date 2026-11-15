@@ -134,6 +134,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check existing membership
+    const isEditor = matchedInvite.role === 'editor';
     const { data: existingMember } = await adminSupabase
       .from('circle_members')
       .select('*')
@@ -148,35 +149,37 @@ export async function POST(request: NextRequest) {
           { status: 200 }
         );
       }
-      if (existingMember.status === 'pending') {
-        return NextResponse.json(
-          { message: 'Your join request is already pending elder approval.', circle },
-          { status: 200 }
-        );
-      }
-      // If revoked, re-request pending approval
+      // If pending or revoked, approve immediately with valid passcode
       await adminSupabase
         .from('circle_members')
         .update({
-          status: 'pending',
+          status: 'approved',
           role: matchedInvite.role,
+          permissions: {
+            medications: true,
+            appointments: true,
+            health_checkins: true,
+            voice_messages: isEditor,
+            insights: isEditor,
+          },
           updated_at: new Date().toISOString(),
         })
         .eq('id', existingMember.id);
     } else {
-      // Create pending membership
+      // Create approved membership immediately upon valid passcode entry
       const { error: insertMemberError } = await adminSupabase
         .from('circle_members')
         .insert({
           circle_id: circle.id,
           user_id: user.id,
           role: matchedInvite.role,
-          status: 'pending', // Elder must approve!
+          status: 'approved',
           permissions: {
             medications: true,
             appointments: true,
             health_checkins: true,
-            voice_messages: true,
+            voice_messages: isEditor,
+            insights: isEditor,
           },
           notification_preferences: {
             upcoming_doses: true,
@@ -206,7 +209,7 @@ export async function POST(request: NextRequest) {
     await logAuditEvent(adminSupabase, {
       circleId: circle.id,
       actorId: user.id,
-      action: 'member_requested_join',
+      action: 'member_joined',
       resourceType: 'circle_members',
       resourceId: user.id,
       details: {
@@ -215,15 +218,15 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({
-      message: `Passcode accepted! Your request to join ${circle.name} as a ${matchedInvite.role} is submitted and awaiting elder approval.`,
-      status: 'pending',
-      role: matchedInvite.role,
-      circle: {
-        id: circle.id,
-        name: circle.name,
+    return NextResponse.json(
+      {
+        message: `Successfully joined ${circle.name}! You are now connected with ${
+          circle.elder?.full_name || 'the elder'
+        }.`,
+        circle,
       },
-    });
+      { status: 200 }
+    );
   } catch (error) {
     console.error('Error in POST /api/circles/join:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

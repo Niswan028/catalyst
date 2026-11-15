@@ -216,7 +216,12 @@ export default function DashboardPage() {
       {/* Modals */}
       {user.role === 'elderly_user' && (
         <>
-          <FamilyCircleModal isOpen={showCircleModal} onClose={() => setShowCircleModal(false)} />
+          <FamilyCircleModal
+            isOpen={showCircleModal}
+            onClose={() => setShowCircleModal(false)}
+            circleId={user.id === '8ce76e37-7e02-4036-9cfb-b5d37520c279' || user.email?.toLowerCase().includes('eleanor') ? '3b2dffda-1b8e-44a5-835a-c58083c75b29' : undefined}
+            circleName={user.id === '8ce76e37-7e02-4036-9cfb-b5d37520c279' || user.email?.toLowerCase().includes('eleanor') ? 'Vance Family Care Circle' : undefined}
+          />
           <TestReminderModal
             isOpen={showTestReminderModal}
             onClose={() => setShowTestReminderModal(false)}

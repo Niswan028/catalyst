@@ -62,7 +62,8 @@ export async function getAuthenticatedContext(
 export function createServiceRoleClient(): SupabaseClient {
   const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const rawServiceKey =
-    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    process.env.SUPABASE_SERVICE_ROLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   const supabaseUrl =
     rawUrl && !rawUrl.includes('placeholder') ? rawUrl : SUPABASE_DEFAULTS.URL;
   const serviceKey =
