@@ -216,7 +216,22 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user) return null;
+  if (!user) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center p-8 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-primary-100 text-primary-700 flex items-center justify-center text-2xl font-black mb-4">
+          C+
+        </div>
+        <h2 className="text-xl font-bold text-slate-800 mb-2">Sign in to Access CareConnect</h2>
+        <p className="text-sm text-slate-600 mb-6 max-w-sm">
+          Please sign in to view your medication schedules, adherence logs, and family care circle.
+        </p>
+        <Button onClick={() => router.push('/auth/signin')}>
+          Go to Sign In
+        </Button>
+      </div>
+    );
+  }
 
   if (isEasyMode && user.role === 'elderly_user') {
     return (

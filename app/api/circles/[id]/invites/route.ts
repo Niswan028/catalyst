@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedContext } from '@/lib/supabase/authServer';
+import { getAuthenticatedContext, createServiceRoleClient } from '@/lib/supabase/authServer';
 import { createInviteSchema } from '@/lib/validations/circles';
 import { generatePasscode, hashPasscode, calculateExpiryDate } from '@/lib/passcode';
 import { logAuditEvent } from '@/lib/audit';
@@ -13,11 +13,12 @@ export async function GET(
     if ('error' in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
-    const { supabase, user } = authResult;
+    const { user } = authResult;
     const circleId = params.id;
+    const adminSupabase = createServiceRoleClient();
 
     // Verify user is elder or approved editor
-    const { data: circle } = await supabase
+    const { data: circle } = await adminSupabase
       .from('care_circles')
       .select('elder_id')
       .eq('id', circleId)
@@ -29,20 +30,20 @@ export async function GET(
 
     const isElder = circle.elder_id === user.id;
     if (!isElder) {
-      const { data: membership } = await supabase
+      const { data: membership } = await adminSupabase
         .from('circle_members')
         .select('role, status')
         .eq('circle_id', circleId)
         .eq('user_id', user.id)
         .eq('status', 'approved')
-        .single();
+        .maybeSingle();
 
-      if (!membership || membership.role !== 'editor') {
+      if (!membership || (membership.role !== 'editor' && membership.role !== 'elder')) {
         return NextResponse.json({ error: 'Unauthorized to view invite codes' }, { status: 403 });
       }
     }
 
-    const { data: invites, error } = await supabase
+    const { data: invites, error } = await adminSupabase
       .from('invite_codes')
       .select('id, circle_id, code_prefix, role, max_uses, uses_count, expires_at, is_revoked, created_at')
       .eq('circle_id', circleId)
@@ -68,11 +69,12 @@ export async function POST(
     if ('error' in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
-    const { supabase, user } = authResult;
+    const { user } = authResult;
     const circleId = params.id;
+    const adminSupabase = createServiceRoleClient();
 
     // Verify user is elder or approved editor
-    const { data: circle } = await supabase
+    const { data: circle } = await adminSupabase
       .from('care_circles')
       .select('elder_id')
       .eq('id', circleId)
@@ -84,15 +86,15 @@ export async function POST(
 
     const isElder = circle.elder_id === user.id;
     if (!isElder) {
-      const { data: membership } = await supabase
+      const { data: membership } = await adminSupabase
         .from('circle_members')
         .select('role, status')
         .eq('circle_id', circleId)
         .eq('user_id', user.id)
         .eq('status', 'approved')
-        .single();
+        .maybeSingle();
 
-      if (!membership || membership.role !== 'editor') {
+      if (!membership || (membership.role !== 'editor' && membership.role !== 'elder')) {
         return NextResponse.json(
           { error: 'Only elders or approved editors can create invite passcodes' },
           { status: 403 }
@@ -117,7 +119,7 @@ export async function POST(
     const codePrefix = rawPasscode.substring(0, 2);
     const expiresAt = calculateExpiryDate(expiry_hours);
 
-    const { data: newInvite, error: insertError } = await supabase
+    const { data: newInvite, error: insertError } = await adminSupabase
       .from('invite_codes')
       .insert({
         circle_id: circleId,
@@ -137,7 +139,7 @@ export async function POST(
       return NextResponse.json({ error: insertError.message }, { status: 400 });
     }
 
-    await logAuditEvent(supabase, {
+    await logAuditEvent(adminSupabase, {
       circleId,
       actorId: user.id,
       action: 'invite_code_generated',
@@ -166,8 +168,9 @@ export async function DELETE(
     if ('error' in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
-    const { supabase, user } = authResult;
+    const { user } = authResult;
     const circleId = params.id;
+    const adminSupabase = createServiceRoleClient();
     const { searchParams } = new URL(request.url);
     const inviteId = searchParams.get('invite_id');
 
@@ -175,7 +178,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'invite_id query param is required' }, { status: 400 });
     }
 
-    const { data: circle } = await supabase
+    const { data: circle } = await adminSupabase
       .from('care_circles')
       .select('elder_id')
       .eq('id', circleId)
@@ -186,7 +189,7 @@ export async function DELETE(
     }
 
     // Must be elder or creator of the invite
-    const { data: invite } = await supabase
+    const { data: invite } = await adminSupabase
       .from('invite_codes')
       .select('*')
       .eq('id', inviteId)
@@ -204,7 +207,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized to revoke this invite code' }, { status: 403 });
     }
 
-    const { error: revokeError } = await supabase
+    const { error: revokeError } = await adminSupabase
       .from('invite_codes')
       .update({ is_revoked: true })
       .eq('id', inviteId);
@@ -213,7 +216,7 @@ export async function DELETE(
       return NextResponse.json({ error: revokeError.message }, { status: 400 });
     }
 
-    await logAuditEvent(supabase, {
+    await logAuditEvent(adminSupabase, {
       circleId,
       actorId: user.id,
       action: 'invite_code_revoked',

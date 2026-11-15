@@ -124,7 +124,11 @@ export default function CaregiverDashboard() {
       const data = await response.json();
 
       if (response.ok) {
-        setLinkedUsers(data.links || []);
+        const links = data.links || [];
+        setLinkedUsers(links);
+        if (links.length > 0) {
+          setSelectedUser((prev) => prev || links[0]);
+        }
       } else {
         setError(data.error || 'Failed to fetch linked users');
       }

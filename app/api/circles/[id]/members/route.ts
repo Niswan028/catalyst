@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedContext } from '@/lib/supabase/authServer';
+import { getAuthenticatedContext, createServiceRoleClient } from '@/lib/supabase/authServer';
 import { updateMemberSchema } from '@/lib/validations/circles';
 import { logAuditEvent } from '@/lib/audit';
 
@@ -12,11 +12,12 @@ export async function GET(
     if ('error' in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
-    const { supabase, user } = authResult;
+    const { user } = authResult;
     const circleId = params.id;
+    const adminSupabase = createServiceRoleClient();
 
     // Check user has access to circle
-    const { data: circle } = await supabase
+    const { data: circle } = await adminSupabase
       .from('care_circles')
       .select('*')
       .eq('id', circleId)
@@ -29,20 +30,20 @@ export async function GET(
     const isElder = circle.elder_id === user.id;
 
     if (!isElder) {
-      const { data: membership } = await supabase
+      const { data: membership } = await adminSupabase
         .from('circle_members')
         .select('id, status')
         .eq('circle_id', circleId)
         .eq('user_id', user.id)
         .eq('status', 'approved')
-        .single();
+        .maybeSingle();
 
       if (!membership) {
         return NextResponse.json({ error: 'Unauthorized to view this circle' }, { status: 403 });
       }
     }
 
-    const { data: members, error } = await supabase
+    const { data: members, error } = await adminSupabase
       .from('circle_members')
       .select(`
         id,
@@ -84,11 +85,12 @@ export async function PATCH(
     if ('error' in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
-    const { supabase, user } = authResult;
+    const { user } = authResult;
     const circleId = params.id;
+    const adminSupabase = createServiceRoleClient();
 
     // Verify elder ownership
-    const { data: circle } = await supabase
+    const { data: circle } = await adminSupabase
       .from('care_circles')
       .select('elder_id')
       .eq('id', circleId)
@@ -113,7 +115,7 @@ export async function PATCH(
     const { member_id, status, role, permissions, notification_preferences } = validated.data;
 
     // Fetch existing member
-    const { data: existingMember } = await supabase
+    const { data: existingMember } = await adminSupabase
       .from('circle_members')
       .select('*')
       .eq('id', member_id)
@@ -143,7 +145,7 @@ export async function PATCH(
       };
     }
 
-    const { data: updatedMember, error: updateError } = await supabase
+    const { data: updatedMember, error: updateError } = await adminSupabase
       .from('circle_members')
       .update(updates)
       .eq('id', member_id)
@@ -154,7 +156,7 @@ export async function PATCH(
       return NextResponse.json({ error: updateError.message }, { status: 400 });
     }
 
-    await logAuditEvent(supabase, {
+    await logAuditEvent(adminSupabase, {
       circleId,
       actorId: user.id,
       action: status === 'approved' ? 'member_approved' : 'member_updated',
@@ -182,8 +184,9 @@ export async function DELETE(
     if ('error' in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
-    const { supabase, user } = authResult;
+    const { user } = authResult;
     const circleId = params.id;
+    const adminSupabase = createServiceRoleClient();
     const { searchParams } = new URL(request.url);
     const memberId = searchParams.get('member_id');
 
@@ -191,7 +194,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'member_id query param is required' }, { status: 400 });
     }
 
-    const { data: circle } = await supabase
+    const { data: circle } = await adminSupabase
       .from('care_circles')
       .select('elder_id')
       .eq('id', circleId)
@@ -202,7 +205,7 @@ export async function DELETE(
     }
 
     // Check member
-    const { data: member } = await supabase
+    const { data: member } = await adminSupabase
       .from('circle_members')
       .select('*')
       .eq('id', memberId)
@@ -222,7 +225,7 @@ export async function DELETE(
     }
 
     // Update status to revoked or delete
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await adminSupabase
       .from('circle_members')
       .update({ status: 'revoked', updated_at: new Date().toISOString() })
       .eq('id', memberId);
@@ -231,7 +234,7 @@ export async function DELETE(
       return NextResponse.json({ error: deleteError.message }, { status: 400 });
     }
 
-    await logAuditEvent(supabase, {
+    await logAuditEvent(adminSupabase, {
       circleId,
       actorId: user.id,
       action: isSelf ? 'member_left' : 'member_revoked',

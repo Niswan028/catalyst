@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAuthenticatedContext } from '@/lib/supabase/authServer';
+import { getAuthenticatedContext, createServiceRoleClient } from '@/lib/supabase/authServer';
 import { createCircleSchema } from '@/lib/validations/circles';
 import { logAuditEvent } from '@/lib/audit';
 
@@ -9,10 +9,11 @@ export async function GET(request: NextRequest) {
     if ('error' in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
-    const { supabase, user } = authResult;
+    const { user } = authResult;
+    const adminSupabase = createServiceRoleClient();
 
     // Check user profile role
-    const { data: profile } = await supabase
+    const { data: profile } = await adminSupabase
       .from('users')
       .select('role, full_name, email')
       .eq('id', user.id)
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
 
     // 1. If elder, find or auto-create their circle
     if (profile?.role === 'elderly_user') {
-      let { data: elderCircles } = await supabase
+      let { data: elderCircles } = await adminSupabase
         .from('care_circles')
         .select('*')
         .eq('elder_id', user.id);
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
           ? `${profile.full_name}'s Care Circle`
           : 'My Family Care Circle';
 
-        const { data: newCircle, error: createError } = await supabase
+        const { data: newCircle, error: createError } = await adminSupabase
           .from('care_circles')
           .insert({
             elder_id: user.id,
@@ -42,14 +43,14 @@ export async function GET(request: NextRequest) {
 
         if (!createError && newCircle) {
           // Add elder as approved member
-          await supabase.from('circle_members').insert({
+          await adminSupabase.from('circle_members').insert({
             circle_id: newCircle.id,
             user_id: user.id,
             role: 'elder',
             status: 'approved',
           });
 
-          await logAuditEvent(supabase, {
+          await logAuditEvent(adminSupabase, {
             circleId: newCircle.id,
             actorId: user.id,
             action: 'circle_created',
@@ -69,7 +70,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 2. If caregiver / family member, find circles they have joined
-    const { data: memberRows, error: memberError } = await supabase
+    const { data: memberRows, error: memberError } = await adminSupabase
       .from('circle_members')
       .select(`
         id,
@@ -112,7 +113,8 @@ export async function POST(request: NextRequest) {
     if ('error' in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
-    const { supabase, user } = authResult;
+    const { user } = authResult;
+    const adminSupabase = createServiceRoleClient();
 
     const body = await request.json();
     const validated = createCircleSchema.safeParse(body);
@@ -123,7 +125,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: newCircle, error } = await supabase
+    const { data: newCircle, error } = await adminSupabase
       .from('care_circles')
       .insert({
         elder_id: user.id,
@@ -137,14 +139,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Add elder as approved member
-    await supabase.from('circle_members').insert({
+    await adminSupabase.from('circle_members').insert({
       circle_id: newCircle.id,
       user_id: user.id,
       role: 'elder',
       status: 'approved',
     });
 
-    await logAuditEvent(supabase, {
+    await logAuditEvent(adminSupabase, {
       circleId: newCircle.id,
       actorId: user.id,
       action: 'circle_created',

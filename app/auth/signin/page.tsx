@@ -1,4 +1,4 @@
-// Sign in page
+// Sign in page with 1-Click Demo Evaluation Profiles
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase/client';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Card from '@/components/Card';
+import LoadingSpinner from '@/components/LoadingSpinner';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -15,22 +16,18 @@ export default function SignInPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [quickLoginRole, setQuickLoginRole] = useState<string | null>(null);
 
   // Handle OAuth callback and check authentication status
   useEffect(() => {
     const handleAuthCallback = async () => {
-      // Check for hash fragment (OAuth redirect)
       if (window.location.hash) {
-        // Redirect to callback page to handle tokens
         router.push('/auth/callback' + window.location.hash);
         return;
       }
 
-      // Check if user is already authenticated
       const { data: { session } } = await supabase.auth.getSession();
-      
       if (session) {
-        // User is authenticated, redirect to dashboard
         router.push('/dashboard');
         router.refresh();
       }
@@ -38,9 +35,7 @@ export default function SignInPage() {
 
     handleAuthCallback();
 
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth event on signin page:', event);
       if (event === 'SIGNED_IN' && session) {
         router.push('/dashboard');
         router.refresh();
@@ -78,24 +73,50 @@ export default function SignInPage() {
     }
   };
 
+  const handleQuickDemoLogin = async (
+    demoEmail: string,
+    targetRoute: '/dashboard' | '/caregiver',
+    roleTag: string
+  ) => {
+    setError('');
+    setQuickLoginRole(roleTag);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: demoEmail,
+        password: 'Password123!Secure',
+      });
+
+      if (error) throw error;
+
+      if (data?.session) {
+        document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
+      }
+
+      router.push(targetRoute);
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message || 'Failed to sign in with demo account');
+    } finally {
+      setQuickLoginRole(null);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
           queryParams: {
-            prompt: 'select_account', // Always show account chooser
+            prompt: 'select_account',
           },
         },
       });
 
       if (error) throw error;
-      
-      // OAuth will redirect, so we don't need to do anything here
     } catch (error: any) {
       setError(error.message || 'Failed to sign in with Google');
       setLoading(false);
@@ -103,29 +124,152 @@ export default function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-primary-700 mb-2">CareConnect</h1>
-          <p className="text-gray-600">Healthcare Voice Assistant</p>
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-slate-50 to-teal-50 flex items-center justify-center px-4 py-12">
+      <div className="max-w-md w-full space-y-6">
+        <div className="text-center">
+          <Link href="/" className="inline-flex items-center gap-2 mb-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-primary-700 to-teal-600 text-white flex items-center justify-center font-black text-2xl shadow-md">
+              C+
+            </div>
+            <span className="text-3xl font-black text-slate-900 tracking-tight">
+              Care<span className="text-primary-600">Connect</span>
+            </span>
+          </Link>
+          <p className="text-sm font-medium text-slate-600">
+            Elderly Care & Medication Management Platform
+          </p>
         </div>
 
+        {/* 1-Click Evaluation Demo Logins Card */}
+        <div className="bg-white/90 backdrop-blur-md border-2 border-primary-200 rounded-2xl p-5 shadow-floating">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-black uppercase tracking-wider text-primary-800 flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+              ⚡ Instant 1-Click Demo Logins
+            </span>
+            <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+              Pre-seeded
+            </span>
+          </div>
+          <p className="text-xs text-slate-600 mb-4 leading-relaxed">
+            Select a verified persona to test the platform with full pre-seeded prescriptions, adherence history, care circles, and appointment data:
+          </p>
+
+          <div className="space-y-2.5">
+            <button
+              type="button"
+              disabled={quickLoginRole !== null}
+              onClick={() =>
+                handleQuickDemoLogin('eleanor.vance.demo@gmail.com', '/dashboard', 'eleanor')
+              }
+              className="w-full text-left p-3 rounded-xl bg-gradient-to-r from-teal-50 to-emerald-50 hover:from-teal-100 hover:to-emerald-100 border border-teal-200 text-slate-900 font-bold transition flex items-center justify-between group active:scale-98"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">👵</span>
+                <div>
+                  <div className="text-sm font-extrabold text-teal-950 flex items-center gap-2">
+                    Eleanor Vance
+                    <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-teal-200 text-teal-900">
+                      Elder Owner
+                    </span>
+                  </div>
+                  <div className="text-xs text-teal-700 font-medium">
+                    4 active meds • 96% adherence • Easy Mode toggle
+                  </div>
+                </div>
+              </div>
+              {quickLoginRole === 'eleanor' ? (
+                <LoadingSpinner size="sm" />
+              ) : (
+                <span className="text-xs font-black text-teal-700 group-hover:translate-x-1 transition-transform">
+                  Enter →
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              disabled={quickLoginRole !== null}
+              onClick={() =>
+                handleQuickDemoLogin('marcus.caregiver.demo@gmail.com', '/caregiver', 'marcus')
+              }
+              className="w-full text-left p-3 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 text-slate-900 font-bold transition flex items-center justify-between group active:scale-98"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">👨‍⚕️</span>
+                <div>
+                  <div className="text-sm font-extrabold text-indigo-950 flex items-center gap-2">
+                    Marcus Vance
+                    <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-indigo-200 text-indigo-900">
+                      Son / Editor
+                    </span>
+                  </div>
+                  <div className="text-xs text-indigo-700 font-medium">
+                    Linked to Eleanor • Refill alerts & appointment editor
+                  </div>
+                </div>
+              </div>
+              {quickLoginRole === 'marcus' ? (
+                <LoadingSpinner size="sm" />
+              ) : (
+                <span className="text-xs font-black text-indigo-700 group-hover:translate-x-1 transition-transform">
+                  Enter →
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              disabled={quickLoginRole !== null}
+              onClick={() =>
+                handleQuickDemoLogin('dr.patel.demo@gmail.com', '/caregiver', 'patel')
+              }
+              className="w-full text-left p-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 border border-amber-200 text-slate-900 font-bold transition flex items-center justify-between group active:scale-98"
+            >
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">🩺</span>
+                <div>
+                  <div className="text-sm font-extrabold text-amber-950 flex items-center gap-2">
+                    Dr. Anita Patel, MD
+                    <span className="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-amber-200 text-amber-900">
+                      Clinician
+                    </span>
+                  </div>
+                  <div className="text-xs text-amber-800 font-medium">
+                    Geriatric specialist • Schedule & dose oversight
+                  </div>
+                </div>
+              </div>
+              {quickLoginRole === 'patel' ? (
+                <LoadingSpinner size="sm" />
+              ) : (
+                <span className="text-xs font-black text-amber-800 group-hover:translate-x-1 transition-transform">
+                  Enter →
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Standard Sign In Card */}
         <Card>
-          <h2 className="text-2xl font-semibold mb-6 text-center">Sign In</h2>
+          <h2 className="text-xl font-bold mb-5 text-slate-900 text-center">
+            Sign In with Existing Account
+          </h2>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm font-medium">
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSignIn}>
+          <form onSubmit={handleSignIn} className="space-y-4">
             <Input
-              label="Email"
+              label="Email Address"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="your@email.com"
+              placeholder="eleanor.vance.demo@gmail.com"
               required
             />
 
@@ -138,17 +282,19 @@ export default function SignInPage() {
               required
             />
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Signing in...' : 'Sign In'}
+            <Button type="submit" className="w-full py-3 font-extrabold" disabled={loading}>
+              {loading ? 'Signing in...' : 'Sign In to CareConnect'}
             </Button>
           </form>
 
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t border-slate-200"></div>
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-3 bg-white text-slate-400 font-semibold uppercase tracking-wider">
+                Or continue with
+              </span>
             </div>
           </div>
 
@@ -156,7 +302,7 @@ export default function SignInPage() {
             type="button"
             onClick={handleGoogleSignIn}
             variant="secondary"
-            className="w-full flex items-center justify-center gap-3"
+            className="w-full flex items-center justify-center gap-3 py-2.5 font-bold"
             disabled={loading}
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -180,17 +326,17 @@ export default function SignInPage() {
             Sign in with Google
           </Button>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              Don&apos;t have an account?{' '}
-              <Link href="/auth/signup" className="text-primary-600 hover:text-primary-700 font-medium">
-                Sign Up
-              </Link>
-            </p>
+          <div className="mt-6 text-center text-xs text-slate-600">
+            Don&apos;t have an account?{' '}
+            <Link
+              href="/auth/signup"
+              className="text-primary-600 hover:text-primary-700 font-bold underline"
+            >
+              Sign Up for Free
+            </Link>
           </div>
         </Card>
       </div>
     </div>
   );
 }
-

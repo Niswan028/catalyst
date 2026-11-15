@@ -16,6 +16,7 @@ export default function MessagesPage() {
   const [user, setUser] = useState<User | null>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [linkedUsers, setLinkedUsers] = useState<any[]>([]);
+  const [circleRecipients, setCircleRecipients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRecorder, setShowRecorder] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState<string>('');
@@ -48,6 +49,8 @@ export default function MessagesPage() {
       
       if (userData?.role === 'caregiver') {
         fetchLinkedUsers();
+      } else {
+        fetchCircleRecipients();
       }
     };
     checkAuth();
@@ -99,6 +102,36 @@ export default function MessagesPage() {
       }
     } catch (error) {
       console.error('Error fetching linked users:', error);
+    }
+  };
+
+  const fetchCircleRecipients = async () => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) return;
+      const cRes = await fetch('/api/circles', {
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      const cData = await cRes.json();
+      if (cData.circles && cData.circles.length > 0) {
+        const mRes = await fetch(`/api/circles/${cData.circles[0].id}/members`, {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        });
+        const mData = await mRes.json();
+        if (mData.members) {
+          const recips = mData.members
+            .filter(
+              (m: any) =>
+                m.user && m.user.id !== session.user.id && m.status === 'approved'
+            )
+            .map((m: any) => m.user);
+          setCircleRecipients(recips);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching circle recipients:', error);
     }
   };
 
@@ -202,7 +235,15 @@ export default function MessagesPage() {
       )
     : [];
 
-  const allRecipients = user.role === 'caregiver' ? recipients : caregiverSenders;
+  // For elderly users, combine circle members and past senders
+  const elderRecipientsMap = new Map();
+  [...circleRecipients, ...caregiverSenders].forEach((r) => {
+    if (r && r.id && !elderRecipientsMap.has(r.id)) {
+      elderRecipientsMap.set(r.id, r);
+    }
+  });
+  const allRecipients =
+    user.role === 'caregiver' ? recipients : Array.from(elderRecipientsMap.values());
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
