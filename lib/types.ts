@@ -206,8 +206,10 @@ export interface AdherencePattern {
 }
 
 export interface AdherenceInsight {
-  weeklyAdherenceRate: number;
-  monthlyAdherenceRate: number;
+  hasData: boolean;
+  adherenceRateDisplay: string;
+  weeklyAdherenceRate: number | null;
+  monthlyAdherenceRate: number | null;
   streakDays: number;
   totalScheduled: number;
   totalTaken: number;

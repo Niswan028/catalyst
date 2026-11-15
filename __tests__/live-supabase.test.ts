@@ -56,11 +56,17 @@ describe('Live Supabase Project Verification', () => {
       'passcode_rate_limits',
     ];
 
-    for (const table of tables) {
-      const { error } = await admin.from(table).select('id').limit(1);
-      expect(error, `Expected table "${table}" to exist and be accessible`).toBeNull();
+    const results = await Promise.all(
+      tables.map(async (table) => {
+        const { error } = await admin.from(table).select('id').limit(1);
+        return { table, error };
+      })
+    );
+
+    for (const res of results) {
+      expect(res.error, `Expected table "${res.table}" to exist and be accessible`).toBeNull();
     }
-  });
+  }, 15000);
 
   it('verifies appointments CRUD and Care Circle structure on live database', async () => {
     if (!isConfigured) return;

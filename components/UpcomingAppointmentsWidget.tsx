@@ -8,6 +8,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { supabase } from '@/lib/supabase/client';
 import { Appointment } from '@/lib/types';
 import { format, isToday, isTomorrow, formatDistanceToNow } from 'date-fns';
+import { downloadAppointmentIcs } from '@/lib/calendar/ics';
 
 interface UpcomingAppointmentsWidgetProps {
   circleId?: string;
@@ -157,23 +158,33 @@ export default function UpcomingAppointmentsWidget({
                 )}
               </div>
 
-              {canEdit && (
-                <div className="flex items-center gap-2 self-end sm:self-center">
-                  <button
-                    onClick={() => handleMarkDone(appt.id)}
-                    className="text-xs bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 px-3 py-1.5 rounded-lg font-medium transition-colors"
-                    title="Mark this visit as completed"
-                  >
-                    ✓ Done
-                  </button>
-                  <Link
-                    href={`/appointments?edit=${appt.id}`}
-                    className="text-xs text-gray-600 hover:text-gray-900 px-2 py-1"
-                  >
-                    Edit
-                  </Link>
-                </div>
-              )}
+              <div className="flex items-center gap-2 self-end sm:self-center">
+                <button
+                  onClick={() => downloadAppointmentIcs(appt)}
+                  className="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1"
+                  title="Download .ics Calendar Event"
+                  aria-label={`Export ${appt.doctor_name} appointment to calendar`}
+                >
+                  📅 .ics
+                </button>
+                {canEdit && (
+                  <>
+                    <button
+                      onClick={() => handleMarkDone(appt.id)}
+                      className="text-xs bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 px-3 py-1.5 rounded-lg font-medium transition-colors"
+                      title="Mark this visit as completed"
+                    >
+                      ✓ Done
+                    </button>
+                    <Link
+                      href={`/appointments?edit=${appt.id}`}
+                      className="text-xs text-gray-600 hover:text-gray-900 px-2 py-1"
+                    >
+                      Edit
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           ))}
         </div>

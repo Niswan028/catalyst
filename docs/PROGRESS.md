@@ -24,13 +24,13 @@ This document tracks progress across all 11 phases of the hackathon engineering 
   - [x] Granular per-member elder privacy toggles (`can_view_medications`, `can_view_appointments`, `can_view_checkins`, `can_view_voice_messages`, `can_view_insights`)
   - [x] Rate limiting: 5 failed attempts per 15 min per user and per IP with constant-time comparison
   - [x] Family Circle UI with copyable passcode, countdown timer, role switching, revoke button
-- [ ] **Phase 3: Medications, Adherence & Appointments**
-  - [ ] Flexible medication schedules (daily, specific days, multiple doses per day)
-  - [ ] Dose logging: `taken`, `skipped`, `missed` with auto-marking after grace period
-  - [ ] Adherence engine: daily, weekly, monthly %, streaks, pattern detection (most-missed time slots), "No data yet" zero-dose handling, disclaimer
-  - [ ] Refill forecasting from stock & daily dosage
-  - [ ] Appointments CRUD with `.ics` calendar export and dashboard widget
-  - [ ] Circle audit log table and elder-visible audit log viewer
+- [x] **Phase 3: Medications, Adherence & Appointments**
+  - [x] Flexible medication schedules (daily, specific days, multiple doses per day)
+  - [x] Dose logging: `taken`, `skipped`, `missed` with auto-marking after grace period
+  - [x] Adherence engine: daily, weekly, monthly %, streaks, pattern detection (most-missed time slots), "No data yet" zero-dose handling, disclaimer
+  - [x] Refill forecasting from stock & daily dosage
+  - [x] Appointments CRUD with `.ics` calendar export and dashboard widget
+  - [x] Circle audit log table and elder-visible audit log viewer
 - [ ] **Phase 4: Proactive Email Reminders**
   - [ ] Server-side email dispatcher (Nodemailer / Resend) with accessible HTML + plain-text fallback
   - [ ] Scheduled cron route (`/api/cron/reminders`) protected with `CRON_SECRET`
@@ -93,7 +93,8 @@ This document tracks progress across all 11 phases of the hackathon engineering 
 *(Recorded after each phase run)*
 - **Phase 1**: PASSED (lint: 0 errors/warnings, typecheck: 0 errors with noUncheckedIndexedAccess, vitest: 71/71 passed, build: 28/28 pages static/dynamic compiled)
 - **Phase 2**: PASSED (migration 04 created, dual IP/user rate-limiting verified, constant-time bcrypt checks, elder approvals/revocations functional, 71/71 tests green, build clean)
-- **Phase 3**: Pending
+- **Phase 3**: PASSED (zero-dose adherence "No data yet", .ics calendar exports with 24h/2h alarms, 74/74 tests green, build clean)
+- **Phase 4**: Pending
 - **Phase 3**: Pending
 - **Phase 4**: Pending
 - **Phase 5**: Pending

@@ -9,6 +9,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { supabase } from '@/lib/supabase/client';
 import { Appointment, AppointmentStatus, User } from '@/lib/types';
 import { format } from 'date-fns';
+import { downloadAppointmentIcs } from '@/lib/calendar/ics';
 
 function AppointmentsContent() {
   const router = useRouter();
@@ -318,12 +319,22 @@ function AppointmentsContent() {
                       </button>
                     )}
                   </div>
-                  <button
-                    onClick={() => openEditModal(appt)}
-                    className="text-xs text-gray-600 hover:text-gray-900 font-medium underline"
-                  >
-                    Edit Details
-                  </button>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => downloadAppointmentIcs(appt)}
+                      className="text-xs bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 px-3 py-1.5 rounded-lg font-medium transition-colors flex items-center gap-1"
+                      title="Download .ics Calendar Event"
+                      aria-label={`Export ${appt.doctor_name} appointment to calendar`}
+                    >
+                      📅 Export .ics
+                    </button>
+                    <button
+                      onClick={() => openEditModal(appt)}
+                      className="text-xs text-gray-600 hover:text-gray-900 font-medium underline"
+                    >
+                      Edit Details
+                    </button>
+                  </div>
                 </div>
               </Card>
             );

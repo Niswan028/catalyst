@@ -35,6 +35,17 @@ describe('Adherence Metrics Calculations', () => {
     },
   ];
 
+  it('returns "No data yet" and null adherence when there are zero scheduled doses (never 100%)', () => {
+    const metrics = calculateAdherenceMetrics([], []);
+    expect(metrics.hasData).toBe(false);
+    expect(metrics.weeklyAdherenceRate).toBeNull();
+    expect(metrics.monthlyAdherenceRate).toBeNull();
+
+    const insight = generateAdherenceInsight([], []);
+    expect(insight.hasData).toBe(false);
+    expect(insight.adherenceRateDisplay).toBe('No data yet');
+  });
+
   it('calculates 100% adherence when all doses are logged taken', () => {
     const logs: MedicationLog[] = [];
     const now = new Date();

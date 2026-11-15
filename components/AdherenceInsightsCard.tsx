@@ -77,17 +77,21 @@ export default function AdherenceInsightsCard({ userId }: AdherenceInsightsCardP
           <span className="text-xs text-gray-600 block">Weekly Adherence</span>
           <span
             className={`text-2xl font-black ${
-              insight.weeklyAdherenceRate >= 80 ? 'text-green-600' : 'text-amber-600'
+              insight.weeklyAdherenceRate === null
+                ? 'text-gray-500 text-lg'
+                : insight.weeklyAdherenceRate >= 80
+                ? 'text-green-600'
+                : 'text-amber-600'
             }`}
           >
-            {insight.weeklyAdherenceRate}%
+            {insight.weeklyAdherenceRate !== null ? `${insight.weeklyAdherenceRate}%` : 'No data yet'}
           </span>
         </div>
 
         <div className="p-3 bg-purple-50 rounded-xl text-center border border-purple-100">
           <span className="text-xs text-gray-600 block">Monthly Rate</span>
-          <span className="text-2xl font-black text-purple-700">
-            {insight.monthlyAdherenceRate}%
+          <span className={`text-2xl font-black ${insight.monthlyAdherenceRate === null ? 'text-gray-500 text-lg' : 'text-purple-700'}`}>
+            {insight.monthlyAdherenceRate !== null ? `${insight.monthlyAdherenceRate}%` : 'No data yet'}
           </span>
         </div>
 

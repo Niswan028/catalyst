@@ -13,8 +13,9 @@ export function calculateAdherenceMetrics(
   logs: MedicationLog[],
   now: Date = new Date()
 ): {
-  weeklyAdherenceRate: number;
-  monthlyAdherenceRate: number;
+  hasData: boolean;
+  weeklyAdherenceRate: number | null;
+  monthlyAdherenceRate: number | null;
   streakDays: number;
   totalScheduledWeek: number;
   totalTakenWeek: number;
@@ -23,8 +24,9 @@ export function calculateAdherenceMetrics(
   const activeMeds = medications.filter((m) => m.is_active);
   if (activeMeds.length === 0) {
     return {
-      weeklyAdherenceRate: 100,
-      monthlyAdherenceRate: 100,
+      hasData: false,
+      weeklyAdherenceRate: null,
+      monthlyAdherenceRate: null,
       streakDays: 0,
       totalScheduledWeek: 0,
       totalTakenWeek: 0,
@@ -101,6 +103,7 @@ export function calculateAdherenceMetrics(
   }
 
   return {
+    hasData: true,
     weeklyAdherenceRate,
     monthlyAdherenceRate,
     streakDays,
@@ -187,6 +190,11 @@ export function generateAdherenceInsight(
   const patterns = detectAdherencePatterns(medications, logs);
 
   return {
+    hasData: metrics.hasData,
+    adherenceRateDisplay:
+      metrics.hasData && metrics.weeklyAdherenceRate !== null
+        ? `${metrics.weeklyAdherenceRate}%`
+        : 'No data yet',
     weeklyAdherenceRate: metrics.weeklyAdherenceRate,
     monthlyAdherenceRate: metrics.monthlyAdherenceRate,
     streakDays: metrics.streakDays,
