@@ -46,10 +46,12 @@ export default function Navbar() {
           { href: '/dashboard', label: 'Dashboard' },
           { href: '/checkin', label: 'Check-In' },
           { href: '/medications', label: 'Medications' },
+          { href: '/appointments', label: 'Appointments' },
           { href: '/messages', label: 'Messages' },
         ]
       : [
           { href: '/caregiver', label: 'Dashboard' },
+          { href: '/appointments', label: 'Appointments' },
           { href: '/messages', label: 'Messages' },
         ];
 

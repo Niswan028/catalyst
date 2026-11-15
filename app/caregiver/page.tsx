@@ -10,6 +10,7 @@ import Input from '@/components/Input';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import { format } from 'date-fns';
 import JoinCircleModal from '@/components/JoinCircleModal';
+import UpcomingAppointmentsWidget from '@/components/UpcomingAppointmentsWidget';
 
 interface LinkedUser {
   id: string;
@@ -510,53 +511,58 @@ export default function CaregiverDashboard() {
 
               {/* Tab Content */}
               {activeTab === 'overview' && (
-                <Card title="Recent Health Summaries">
-                  {userSummaries.length === 0 ? (
-                    <p className="text-gray-600">
-                      No health summaries available. The user needs to complete daily check-ins.
-                    </p>
-                  ) : (
-                    <div className="space-y-4">
-                      {userSummaries.map((summary) => (
-                        <div
-                          key={summary.id}
-                          className="border rounded-lg p-4 bg-gray-50"
-                        >
-                          <div className="flex justify-between items-center mb-2">
-                            <span className="font-medium text-gray-800">
-                              {format(new Date(summary.date), 'EEEE, MMM dd, yyyy')}
-                            </span>
-                            <span className="text-sm text-gray-500">
-                              {summary.total_checkins} check-in(s)
-                            </span>
+                <div className="space-y-6">
+                  <Card title="Recent Health Summaries">
+                    {userSummaries.length === 0 ? (
+                      <p className="text-gray-600">
+                        No health summaries available. The user needs to complete daily check-ins.
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {userSummaries.map((summary) => (
+                          <div
+                            key={summary.id}
+                            className="border rounded-lg p-4 bg-gray-50"
+                          >
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="font-medium text-gray-800">
+                                {format(new Date(summary.date), 'EEEE, MMM dd, yyyy')}
+                              </span>
+                              <span className="text-sm text-gray-500">
+                                {summary.total_checkins} check-in(s)
+                              </span>
+                            </div>
+                            <div className="grid grid-cols-3 gap-4 text-sm">
+                              <div>
+                                <span className="text-gray-600">Mood:</span>
+                                <p className="font-medium">
+                                  {summary.mood_summary || 'Not available'}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Symptoms:</span>
+                                <p className="font-medium">
+                                  {summary.symptoms?.length > 0
+                                    ? summary.symptoms.join(', ')
+                                    : 'None detected'}
+                                </p>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Medication:</span>
+                                <p className="font-medium">
+                                  {summary.medication_adherence_rate?.toFixed(0) || 0}% adherence
+                                </p>
+                              </div>
+                            </div>
                           </div>
-                          <div className="grid grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-600">Mood:</span>
-                              <p className="font-medium">
-                                {summary.mood_summary || 'Not available'}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Symptoms:</span>
-                              <p className="font-medium">
-                                {summary.symptoms?.length > 0
-                                  ? summary.symptoms.join(', ')
-                                  : 'None detected'}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Medication:</span>
-                              <p className="font-medium">
-                                {summary.medication_adherence_rate?.toFixed(0) || 0}% adherence
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+
+                  {/* Upcoming Appointments Widget */}
+                  <UpcomingAppointmentsWidget canEdit={true} />
+                </div>
               )}
 
               {activeTab === 'medications' && (
@@ -769,17 +775,21 @@ export default function CaregiverDashboard() {
               )}
             </div>
           ) : (
-            <Card>
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">👈</div>
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  Select a User
-                </h3>
-                <p className="text-gray-600">
-                  Click on a linked user to view their health information
-                </p>
-              </div>
-            </Card>
+            <div className="space-y-6">
+              <Card>
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">👈</div>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-2">
+                    Select a User
+                  </h3>
+                  <p className="text-gray-600">
+                    Click on a linked user to view their health information
+                  </p>
+                </div>
+              </Card>
+
+              <UpcomingAppointmentsWidget canEdit={true} />
+            </div>
           )}
         </div>
       </div>

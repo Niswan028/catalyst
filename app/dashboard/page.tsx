@@ -10,6 +10,7 @@ import LoadingSpinner from '@/components/LoadingSpinner';
 import { User, DailySummary, Medication, StockAlert } from '@/lib/types';
 import { format } from 'date-fns';
 import FamilyCircleModal from '@/components/FamilyCircleModal';
+import UpcomingAppointmentsWidget from '@/components/UpcomingAppointmentsWidget';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -258,37 +259,42 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-          {/* Today's Summary */}
-          <Card title="Today's Summary">
-            {summary ? (
-              <div className="space-y-3">
-                <div>
-                  <span className="font-medium text-gray-700">Mood:</span>{' '}
-                  <span className="text-gray-900">{summary.mood_summary || 'Not available'}</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Today's Summary */}
+            <Card title="Today's Summary">
+              {summary ? (
+                <div className="space-y-3">
+                  <div>
+                    <span className="font-medium text-gray-700">Mood:</span>{' '}
+                    <span className="text-gray-900">{summary.mood_summary || 'Not available'}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Symptoms:</span>{' '}
+                    <span className="text-gray-900">
+                      {summary.symptoms?.length > 0 ? summary.symptoms.join(', ') : 'None detected'}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Medication Adherence:</span>{' '}
+                    <span className="text-gray-900">
+                      {summary.medication_adherence_rate?.toFixed(0) || 0}%
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-700">Check-ins:</span>{' '}
+                    <span className="text-gray-900">{summary.total_checkins}</span>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-medium text-gray-700">Symptoms:</span>{' '}
-                  <span className="text-gray-900">
-                    {summary.symptoms?.length > 0 ? summary.symptoms.join(', ') : 'None detected'}
-                  </span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Medication Adherence:</span>{' '}
-                  <span className="text-gray-900">
-                    {summary.medication_adherence_rate?.toFixed(0) || 0}%
-                  </span>
-                </div>
-                <div>
-                  <span className="font-medium text-gray-700">Check-ins:</span>{' '}
-                  <span className="text-gray-900">{summary.total_checkins}</span>
-                </div>
-              </div>
-            ) : (
-              <p className="text-gray-600">
-                No summary available yet. Complete your first check-in to generate a summary!
-              </p>
-            )}
-          </Card>
+              ) : (
+                <p className="text-gray-600">
+                  No summary available yet. Complete your first check-in to generate a summary!
+                </p>
+              )}
+            </Card>
+
+            {/* Upcoming Appointments Widget */}
+            <UpcomingAppointmentsWidget />
+          </div>
 
           {/* Upcoming Medications */}
           {medications.length > 0 && (
