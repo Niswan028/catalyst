@@ -18,22 +18,25 @@ export async function POST(request: NextRequest) {
     }
     const { supabase, user } = authResult;
 
-    // Determine client identifier for rate-limiting
+    // Determine client identifier for dual rate-limiting (per user AND per IP)
     const ip =
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
       request.headers.get('x-real-ip') ||
       'unknown-ip';
-    const rateLimitKey = `passcode:${user.id}:${ip}`;
+    const userRateKey = `passcode_user:${user.id}`;
+    const ipRateKey = `passcode_ip:${ip}`;
 
-    // 1. Check rate limit
-    const limitStatus = checkRateLimit(rateLimitKey, PASSCODE_RATE_LIMIT_CONFIG);
-    if (!limitStatus.allowed) {
+    // 1. Check rate limit on both user and IP
+    const userLimit = checkRateLimit(userRateKey, PASSCODE_RATE_LIMIT_CONFIG);
+    const ipLimit = checkRateLimit(ipRateKey, PASSCODE_RATE_LIMIT_CONFIG);
+    if (!userLimit.allowed || !ipLimit.allowed) {
+      const retryAfter = Math.max(userLimit.retryAfterSeconds, ipLimit.retryAfterSeconds);
       return NextResponse.json(
         {
-          error: `Too many failed passcode attempts. Account locked out for ${Math.ceil(
-            limitStatus.retryAfterSeconds / 60
+          error: `Too many failed passcode attempts. Locked out for ${Math.ceil(
+            retryAfter / 60
           )} minutes. Please try again later.`,
-          retryAfterSeconds: limitStatus.retryAfterSeconds,
+          retryAfterSeconds: retryAfter,
         },
         { status: 429 }
       );
@@ -81,21 +84,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // If no match found, record failed attempt
+    // If no match found, record failed attempt on both user and IP
     if (!matchedInvite) {
-      const failResult = recordFailedAttempt(rateLimitKey, PASSCODE_RATE_LIMIT_CONFIG);
-      if (failResult.locked) {
+      const userFail = recordFailedAttempt(userRateKey, PASSCODE_RATE_LIMIT_CONFIG);
+      const ipFail = recordFailedAttempt(ipRateKey, PASSCODE_RATE_LIMIT_CONFIG);
+      const isLocked = userFail.locked || ipFail.locked;
+      const retryAfter = Math.max(userFail.retryAfterSeconds, ipFail.retryAfterSeconds);
+
+      if (isLocked) {
         return NextResponse.json(
           {
             error: `Maximum failed attempts reached. Passcode verification is locked out for 15 minutes.`,
             locked: true,
-            retryAfterSeconds: failResult.retryAfterSeconds,
+            retryAfterSeconds: retryAfter,
           },
           { status: 429 }
         );
       }
 
-      const remaining = PASSCODE_RATE_LIMIT_CONFIG.maxAttempts;
       return NextResponse.json(
         {
           error: 'Invalid, expired, or revoked passcode. Please check the code and try again.',
@@ -104,8 +110,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Successful match - reset rate limit
-    resetRateLimit(rateLimitKey);
+    // Successful match - reset rate limit for both
+    resetRateLimit(userRateKey);
+    resetRateLimit(ipRateKey);
 
     // Fetch the circle
     const { data: circle } = await adminSupabase

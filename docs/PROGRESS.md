@@ -17,13 +17,13 @@ This document tracks progress across all 11 phases of the hackathon engineering 
   - [x] Feature-based modular structure: `features/{auth,circles,medications,appointments,notifications,insights}`
   - [x] `lib/env.ts` runtime validation with Zod (fails fast on missing required variables)
   - [x] `.env.local.example` fully documented
-- [ ] **Phase 2: Passcode-Based Shared Access**
-  - [ ] Migration `supabase/04-circle-roles-and-permissions.sql`
-  - [ ] Roles: `owner` (elder), `editor`, `viewer`
-  - [ ] Statuses: `pending`, `active`, `revoked`
-  - [ ] Granular per-member elder privacy toggles (`can_view_medications`, `can_view_appointments`, `can_view_checkins`, `can_view_voice_messages`, `can_view_insights`)
-  - [ ] Rate limiting: 5 failed attempts per 15 min per user and per IP with constant-time comparison
-  - [ ] Family Circle UI with copyable passcode, countdown timer, role switching, revoke button
+- [x] **Phase 2: Passcode-Based Shared Access**
+  - [x] Migration `supabase/04-circle-roles-and-permissions.sql`
+  - [x] Roles: `owner` (elder), `editor`, `viewer`
+  - [x] Statuses: `pending`, `active`, `revoked`
+  - [x] Granular per-member elder privacy toggles (`can_view_medications`, `can_view_appointments`, `can_view_checkins`, `can_view_voice_messages`, `can_view_insights`)
+  - [x] Rate limiting: 5 failed attempts per 15 min per user and per IP with constant-time comparison
+  - [x] Family Circle UI with copyable passcode, countdown timer, role switching, revoke button
 - [ ] **Phase 3: Medications, Adherence & Appointments**
   - [ ] Flexible medication schedules (daily, specific days, multiple doses per day)
   - [ ] Dose logging: `taken`, `skipped`, `missed` with auto-marking after grace period
@@ -92,7 +92,8 @@ This document tracks progress across all 11 phases of the hackathon engineering 
 ## Verification Gates Log
 *(Recorded after each phase run)*
 - **Phase 1**: PASSED (lint: 0 errors/warnings, typecheck: 0 errors with noUncheckedIndexedAccess, vitest: 71/71 passed, build: 28/28 pages static/dynamic compiled)
-- **Phase 2**: Pending
+- **Phase 2**: PASSED (migration 04 created, dual IP/user rate-limiting verified, constant-time bcrypt checks, elder approvals/revocations functional, 71/71 tests green, build clean)
+- **Phase 3**: Pending
 - **Phase 3**: Pending
 - **Phase 4**: Pending
 - **Phase 5**: Pending
