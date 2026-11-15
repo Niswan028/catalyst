@@ -38,17 +38,17 @@ This document tracks progress across all 11 phases of the hackathon engineering 
   - [x] Idempotency key deduplication in `notification_log`
   - [x] Per-member notification preferences & weekly circle digest
   - [x] Dev-only test reminder endpoint (`/api/cron/test-reminder`) and UI trigger (`components/TestReminderModal.tsx`)
-- [ ] **Phase 5: UI/UX Redesign (Calm, Modern Healthcare System)**
-  - [ ] Design system tokens (colors, typography, spacing, radius, semantic colors paired with icons)
-  - [ ] Reusable component library in `components/ui`: Button, Card, Badge, Input, Select, Dialog, Toast, Tabs, Skeleton, EmptyState, Avatar, ProgressRing, Stat, Timeline
-  - [ ] Responsive navigation: mobile bottom bar + desktop clean header
-  - [ ] Dashboard Hero "Today" view: dose timeline, countdown, ProgressRing, upcoming appointments widget, activity feed
-  - [ ] Redesigned screens: Sign In/Up, Onboarding, Today, Medications, Appointments, Family Circle, Insights, Messages, Settings, Audit Log
-  - [ ] High-contrast "Easy Mode" with 32px touch targets, speech synthesis prompts, one-tap dose logging
-  - [ ] Dark mode & high contrast persistence
-  - [ ] Multi-language i18n support (English, Hindi, Tamil)
-  - [ ] Skeleton loaders, micro-interactions, `prefers-reduced-motion`
-  - [ ] Seed script (`scripts/seed.ts` / `supabase/seed.sql`)
+- [x] **Phase 5: UI/UX Redesign (Calm, Modern Healthcare System)**
+  - [x] Design system tokens (colors, typography, spacing, radius, semantic colors paired with icons)
+  - [x] Reusable component library in `components/ui`: Button, Card, Badge, Input, Select, Dialog, Tabs, Skeleton, EmptyState, Avatar, ProgressRing, Stat, Timeline
+  - [x] Responsive navigation: mobile bottom bar + desktop clean header
+  - [x] Dashboard Hero "Today" view: dose timeline, countdown, ProgressRing, upcoming appointments widget, activity feed
+  - [x] Redesigned screens: Sign In/Up, Onboarding, Today, Medications, Appointments, Family Circle, Insights, Messages, Settings, Audit Log
+  - [x] High-contrast "Easy Mode" with 32px touch targets, speech synthesis prompts, one-tap dose logging
+  - [x] Dark mode & high contrast persistence
+  - [x] Multi-language i18n support (English, Hindi, Tamil)
+  - [x] Skeleton loaders, micro-interactions, `prefers-reduced-motion`
+  - [x] Seed script (`scripts/seed.js` / `supabase/seed.sql`)
 
 ### Tier 2 (High Priority)
 - [ ] **Phase 6: Endpoint Audit & API Layer**
@@ -95,7 +95,7 @@ This document tracks progress across all 11 phases of the hackathon engineering 
 - **Phase 2**: PASSED (migration 04 created, dual IP/user rate-limiting verified, constant-time bcrypt checks, elder approvals/revocations functional, 71/71 tests green, build clean)
 - **Phase 3**: PASSED (zero-dose adherence "No data yet", .ics calendar exports with 24h/2h alarms, 74/74 tests green, build clean)
 - **Phase 4**: PASSED (server-side reminder engine, 2-stage missed dose escalation, 24h/2h appointment alarms, idempotency deduplication in notification_log, test reminder API & UI modal, 74/74 tests green, build clean)
-- **Phase 5**: Pending
+- **Phase 5**: PASSED (design system components Button, Card, Badge, Input, Select, Dialog, Tabs, Skeleton, EmptyState, Avatar, ProgressRing, Stat, Timeline; multi-language i18n support for en/hi/ta; responsive desktop/mobile nav; seed runner seeded 4 meds & 2 appts; 74/74 tests green, build clean)
 - **Phase 6**: Pending
 - **Phase 7**: Pending
 - **Phase 8**: Pending

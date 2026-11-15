@@ -3,43 +3,59 @@
 @tailwind utilities;
 
 :root {
-  --foreground-rgb: 17, 24, 39;
-  --background-rgb: 249, 250, 251;
+  --foreground-rgb: 15, 23, 42;
+  --background-rgb: 248, 250, 252;
+  --card-bg: 255, 255, 255;
+  --border-color: 226, 232, 240;
+}
+
+.dark {
+  --foreground-rgb: 241, 245, 249;
+  --background-rgb: 15, 23, 42;
+  --card-bg: 30, 41, 59;
+  --border-color: 51, 65, 85;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-rgb));
+  background-color: rgb(var(--background-rgb));
   font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Skip link for keyboard accessibility */
+/* Skip link for keyboard accessibility (WCAG 2.1 AA) */
 .skip-link {
   position: absolute;
-  top: -40px;
-  left: 0;
-  background: #1e40af;
+  top: -60px;
+  left: 12px;
+  background: #0f766e;
   color: #ffffff;
-  padding: 8px 16px;
-  z-index: 100;
+  padding: 10px 18px;
+  z-index: 1000;
   font-weight: 700;
-  border-radius: 0 0 8px 0;
-  transition: top 0.2s ease;
+  font-size: 14px;
+  border-radius: 8px;
+  transition: top 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
 .skip-link:focus {
-  top: 0;
+  top: 12px;
   outline: 4px solid #facc15;
+  outline-offset: 2px;
 }
 
-/* Visible focus states for all interactive elements (WCAG 2.1 AA) */
+/* Strict visible focus states for keyboard navigation */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
-textarea:focus-visible {
-  outline: 3px solid #2563eb;
+textarea:focus-visible,
+[tabindex='0']:focus-visible {
+  outline: 3px solid #0d9488;
   outline-offset: 2px;
+  border-radius: 6px;
 }
 
 /* Reduced motion preference */
@@ -54,8 +70,26 @@ textarea:focus-visible {
   }
 }
 
+/* High Contrast Mode Helper */
+.high-contrast {
+  --foreground-rgb: 0, 0, 0;
+  --background-rgb: 255, 255, 255;
+}
+
+.high-contrast button,
+.high-contrast a,
+.high-contrast input,
+.high-contrast select {
+  border-width: 2px !important;
+  font-weight: 700 !important;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  .tap-target-44 {
+    min-width: 44px;
+    min-height: 44px;
   }
 }

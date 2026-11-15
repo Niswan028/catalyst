@@ -33,6 +33,8 @@ export interface Medication {
   name: string;
   dosage: string;
   time: string; // Format: "HH:MM"
+  frequency?: string | null;
+  instructions?: string | null;
   total_stock: number;
   low_stock_threshold: number;
   is_active: boolean;
