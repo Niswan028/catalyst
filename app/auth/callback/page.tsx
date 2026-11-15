@@ -38,6 +38,7 @@ function CallbackContent() {
           }
           
           if (data.session) {
+            document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
             await setupUserProfile(data.session.user);
             return;
           }

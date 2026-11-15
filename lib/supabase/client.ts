@@ -34,3 +34,14 @@ export const supabase = createClient(
   }
 );
 
+// Sync auth tokens to cookies for Next.js middleware and server-side navigation
+if (typeof window !== 'undefined') {
+  supabase.auth.onAuthStateChange((event, session) => {
+    if (session) {
+      document.cookie = `sb-access-token=${session.access_token}; path=/; max-age=604800; SameSite=Lax`;
+    } else if (event === 'SIGNED_OUT') {
+      document.cookie = 'sb-access-token=; path=/; max-age=0; SameSite=Lax';
+    }
+  });
+}
+
