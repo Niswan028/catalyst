@@ -113,4 +113,60 @@ describe('WCAG 2.1 AA Accessibility Audits (axe-core)', () => {
     document.body.removeChild(container);
     expect(results.violations).toEqual([]);
   });
+
+  it('passes axe audit on accessible modal dialog structure', async () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <div role="dialog" aria-modal="true" aria-labelledby="dialog-title" aria-describedby="dialog-desc">
+        <h2 id="dialog-title">Log Medication Dose</h2>
+        <p id="dialog-desc">Record whether your scheduled dose was taken or skipped.</p>
+        <button type="button" aria-label="Close dialog">✕</button>
+        <button type="button">Mark as Taken</button>
+        <button type="button">Skip Dose</button>
+      </div>
+    `;
+    document.body.appendChild(container);
+
+    const results = await axe.run(container, {
+      rules: {
+        'html-has-lang': { enabled: false },
+        'document-title': { enabled: false },
+      },
+    });
+
+    document.body.removeChild(container);
+    expect(results.violations).toEqual([]);
+  });
+
+  it('passes axe audit on Easy Mode high contrast controls and status badges', async () => {
+    const container = document.createElement('div');
+    container.innerHTML = `
+      <main>
+        <h1>Easy Mode Overview</h1>
+        <section aria-label="Next scheduled dose">
+          <h2>Metformin 500mg</h2>
+          <p>Due at 12:00 PM</p>
+          <button type="button" aria-label="I Took It - Metformin dose" style="min-height: 56px; font-size: 20px;">
+            ✓ I Took It
+          </button>
+        </section>
+        <section aria-label="Dose status indicators">
+          <div><span aria-hidden="true">✓</span> Taken</div>
+          <div><span aria-hidden="true">⚠️</span> Overdue</div>
+          <div><span aria-hidden="true">⏰</span> Upcoming</div>
+        </section>
+      </main>
+    `;
+    document.body.appendChild(container);
+
+    const results = await axe.run(container, {
+      rules: {
+        'html-has-lang': { enabled: false },
+        'document-title': { enabled: false },
+      },
+    });
+
+    document.body.removeChild(container);
+    expect(results.violations).toEqual([]);
+  });
 });

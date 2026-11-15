@@ -9,7 +9,11 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'CareConnect - Elderly Care & Medication Management Platform',
+  metadataBase: new URL('https://careconnectcatalyst.netlify.app'),
+  title: {
+    default: 'CareConnect - Elderly Care & Medication Management Platform',
+    template: '%s | CareConnect',
+  },
   description:
     'A smart, collaborative healthcare platform empowering elderly individuals, caretakers, and family circles to manage medication schedules, proactive email reminders, and doctor appointments through secure passcode-based access.',
   manifest: '/manifest.json',
@@ -17,14 +21,32 @@ export const metadata: Metadata = {
     icon: '/icon.svg',
     apple: '/icon.svg',
   },
+  alternates: {
+    canonical: 'https://careconnectcatalyst.netlify.app/',
+  },
   openGraph: {
     title: 'CareConnect: Elderly Care & Medication Management Platform',
     description:
-      'Passcode-based family care circles, proactive email escalations, and accessible doctor appointment management.',
+      'Passcode-based family care circles, proactive email escalations, and accessible doctor appointment management. Designed for WCAG 2.1 AA.',
     url: 'https://careconnectcatalyst.netlify.app/',
     siteName: 'CareConnect',
     locale: 'en_US',
     type: 'website',
+    images: [
+      {
+        url: '/og-image.svg',
+        width: 1200,
+        height: 630,
+        alt: 'CareConnect Elderly Care & Medication Management Platform',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'CareConnect: Elderly Care & Medication Management',
+    description:
+      'Passcode-protected family circles and proactive dose escalations keeping seniors at the center of healthcare decisions.',
+    images: ['/og-image.svg'],
   },
 };
 

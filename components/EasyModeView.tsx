@@ -170,7 +170,7 @@ export default function EasyModeView({
               <button
                 onClick={handleOneTapTake}
                 className="w-full bg-green-600 hover:bg-green-700 text-white text-3xl sm:text-4xl font-black py-8 px-6 rounded-3xl border-4 border-black shadow-2xl transition-transform active:scale-95 hover:shadow-inner flex items-center justify-center gap-4"
-                aria-label={`Confirm that you took ${activeMedication.name}`}
+                aria-label={`I Took My Dose - ${activeMedication.name}`}
               >
                 <span>💊</span>
                 <span>I Took My Dose</span>

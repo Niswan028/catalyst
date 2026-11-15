@@ -75,14 +75,14 @@ export function ProgressRing({
             <span className="text-2xl font-extrabold text-slate-900 leading-none tracking-tight">
               {Math.round(normalizedProgress)}%
             </span>
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mt-1">
+            <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mt-1">
               {label}
             </span>
           </>
         ) : (
           <>
-            <span className="text-sm font-bold text-slate-400">No Data</span>
-            <span className="text-[10px] text-slate-400">Yet</span>
+            <span className="text-sm font-bold text-slate-600 dark:text-slate-400">No Data</span>
+            <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-400">Yet</span>
           </>
         )}
       </div>

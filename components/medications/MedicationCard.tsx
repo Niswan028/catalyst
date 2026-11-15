@@ -109,7 +109,7 @@ export default function MedicationCard({
                 aria-label={`Stock level for ${med.name}`}
               />
             </div>
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[10px] text-slate-600 dark:text-slate-400 font-medium">
               Threshold alert triggers at {med.low_stock_threshold} doses remaining.
             </p>
           </div>

@@ -71,7 +71,7 @@ export default function NextDoseCard({
             </div>
           </div>
         ) : (
-          <p className="text-sm text-slate-500 py-6">No scheduled doses remaining for today.</p>
+          <p className="text-sm text-slate-700 dark:text-slate-300 font-medium py-6">No scheduled doses remaining for today.</p>
         )}
       </div>
 

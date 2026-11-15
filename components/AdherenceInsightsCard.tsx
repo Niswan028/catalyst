@@ -101,7 +101,7 @@ export default function AdherenceInsightsCard({ userId }: AdherenceInsightsCardP
 
         <div className="grid grid-cols-2 gap-3 flex-1 w-full">
           <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700 text-center">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
               Monthly Rate
             </span>
             <span className="text-xl font-extrabold text-slate-900 dark:text-slate-100 block mt-0.5">
@@ -110,7 +110,7 @@ export default function AdherenceInsightsCard({ userId }: AdherenceInsightsCardP
           </div>
 
           <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700 text-center">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
               Streak
             </span>
             <span className="text-xl font-extrabold text-primary-700 dark:text-primary-400 block mt-0.5">
@@ -119,7 +119,7 @@ export default function AdherenceInsightsCard({ userId }: AdherenceInsightsCardP
           </div>
 
           <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700 text-center">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
               Taken
             </span>
             <span className="text-xl font-extrabold text-emerald-600 dark:text-emerald-400 block mt-0.5">
@@ -128,7 +128,7 @@ export default function AdherenceInsightsCard({ userId }: AdherenceInsightsCardP
           </div>
 
           <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200/80 dark:border-slate-700 text-center">
-            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+            <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider block">
               Missed
             </span>
             <span className="text-xl font-extrabold text-rose-600 dark:text-rose-400 block mt-0.5">
@@ -161,7 +161,7 @@ export default function AdherenceInsightsCard({ userId }: AdherenceInsightsCardP
                   style={{ height: `${Math.max(20, (rate / 100) * 60)}px` }}
                   title={`${day}: ${rate}% adherence`}
                 />
-                <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+                <span className="text-[10px] font-bold text-slate-700 dark:text-slate-300">
                   {day}
                 </span>
               </div>
@@ -201,7 +201,7 @@ export default function AdherenceInsightsCard({ userId }: AdherenceInsightsCardP
       {/* Pattern Detector Insights */}
       {insight.patterns && insight.patterns.length > 0 ? (
         <div className="space-y-3 mb-4">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
             <span>🔍</span> Schedule Pattern Detector
           </h3>
           {insight.patterns.map((pat, idx) => (

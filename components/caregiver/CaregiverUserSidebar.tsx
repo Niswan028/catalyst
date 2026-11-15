@@ -48,7 +48,7 @@ export function CaregiverUserSidebar({
                 {link.elderly_user.full_name || 'Unknown'}
               </p>
               <p className="text-sm text-gray-600">{link.elderly_user.email}</p>
-              <p className="text-xs text-gray-400 mt-1">
+              <p className="text-xs text-gray-600 dark:text-gray-400 font-medium mt-1">
                 Linked {formatDate(link.created_at)}
               </p>
             </button>

@@ -59,40 +59,40 @@ export default function HomePage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-between">
       {/* Sticky Global Header */}
       <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primary-700 to-primary-500 text-white flex items-center justify-center font-extrabold text-xl shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 overflow-x-hidden">
+          <Link href="/" className="flex items-center gap-2 shrink-0">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-primary-700 to-primary-500 text-white flex items-center justify-center font-extrabold text-lg sm:text-xl shadow-sm">
               C+
             </div>
             <div>
-              <span className="font-extrabold text-xl tracking-tight text-slate-900 block leading-tight">
+              <span className="font-extrabold text-lg sm:text-xl tracking-tight text-slate-900 block leading-tight">
                 Care<span className="text-primary-600">Connect</span>
               </span>
-              <span className="text-[10px] text-slate-400 font-semibold block uppercase tracking-wider">
-                Elder Healthcare Platform
+              <span className="text-[9px] sm:text-[10px] text-slate-600 font-semibold block uppercase tracking-wider">
+                Elder Healthcare
               </span>
             </div>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <Link
               href="/demo"
-              className="text-xs sm:text-sm font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-xs"
+              className="text-xs sm:text-sm font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-2.5 sm:px-3 py-1.5 rounded-xl transition flex items-center gap-1 shadow-xs"
             >
               <span>🏆</span>
-              <span>Judge Tour</span>
+              <span className="hidden xs:inline">Tour</span>
             </Link>
             <Link
               href="/auth/signin"
-              className="text-xs sm:text-sm font-bold text-slate-700 hover:text-primary-700 px-3 py-2 rounded-lg transition"
+              className="text-xs sm:text-sm font-bold text-slate-700 hover:text-primary-700 px-2 sm:px-3 py-1.5 rounded-lg transition"
             >
               Sign In
             </Link>
             <Link
               href="/auth/signup"
-              className="bg-primary-600 hover:bg-primary-700 text-white text-xs sm:text-sm font-bold px-4 py-2.5 rounded-xl shadow-sm transition active:scale-95"
+              className="bg-primary-600 hover:bg-primary-700 text-white text-xs sm:text-sm font-bold px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl shadow-sm transition active:scale-95"
             >
-              Get Started Free
+              Get Started
             </Link>
           </div>
         </div>
@@ -105,7 +105,7 @@ export default function HomePage() {
             {/* Top Pill */}
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary-50 border border-primary-200 text-primary-800 text-xs sm:text-sm font-bold mb-6 shadow-xs animate-fadeIn">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Trusted by 14,200+ Family Care Circles Worldwide</span>
+              <span>Smart Passcode Care Circles • Sample demo data</span>
             </div>
 
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight max-w-4xl mx-auto leading-tight">
@@ -159,7 +159,7 @@ export default function HomePage() {
                   )}
                 </button>
               </div>
-              <p className="text-[11px] text-slate-400 mt-2.5">
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-2.5">
                 Automatically loads active medications, 7-day adherence history, Vance Family Circle, and clinic appointments.
               </p>
             </div>
@@ -172,26 +172,26 @@ export default function HomePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
               <div>
                 <p className="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
-                  14,200+
+                  6
                 </p>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Active Care Circles
+                  Core Healthcare Modules
                 </span>
               </div>
               <div>
                 <p className="text-3xl lg:text-4xl font-extrabold text-primary-700 tracking-tight">
-                  98.4%
+                  3
                 </p>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  On-Time Dose Adherence
+                  Languages (EN, HI, TA)
                 </span>
               </div>
               <div>
                 <p className="text-3xl lg:text-4xl font-extrabold text-slate-900 tracking-tight">
-                  120K+
+                  2-Stage
                 </p>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Proactive Alerts Sent
+                  Email Escalation Chain
                 </span>
               </div>
               <div>
@@ -199,7 +199,7 @@ export default function HomePage() {
                   WCAG 2.1 AA
                 </p>
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                  Certified Accessibility
+                  Designed Accessibility
                 </span>
               </div>
             </div>
@@ -228,7 +228,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-lg font-bold text-slate-900 mb-2">Elder Generates Passcode</h3>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  The elder generates a secure 6-8 character expiring passcode (e.g., CARE-2026). No complex email verification hurdles for elderly users.
+                  The elder generates a secure 6-8 character expiring passcode (Example passcode: CARE-2026). No complex email verification hurdles for elderly users.
                 </p>
               </div>
 
@@ -356,46 +356,70 @@ export default function HomePage() {
           </div>
         </section>
 
-        {/* User Testimonial Quotes */}
+        {/* Sample Evaluation Scenarios */}
         <section className="py-16 bg-white border-t border-slate-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <h3 className="text-center text-2xl font-bold text-slate-900 mb-12">
-              Loved by Families and Trusted by Clinicians
-            </h3>
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="text-xs font-bold text-primary-700 uppercase tracking-widest block mb-1">
+                Evaluation Profiles
+              </span>
+              <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+                Sample Demo Scenarios & User Roles
+              </h3>
+              <p className="text-sm text-slate-600 mt-2">
+                Explore pre-seeded test data simulating real family coordination workflows.
+              </p>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="text-amber-400 text-lg mb-3">★★★★★</div>
-                <p className="text-sm text-slate-700 italic leading-relaxed mb-4">
-                  &ldquo;My mother Eleanor was constantly forgetting her afternoon blood pressure pills. The +15 minute alert
-                  gives me peace of mind at work, and she loves the large Easy Mode buttons!&rdquo;
-                </p>
+              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
                 <div>
-                  <h4 className="font-bold text-sm text-slate-900">Marcus Vance</h4>
-                  <span className="text-xs text-slate-500">Family Caregiver • Chicago, IL</span>
+                  <span className="inline-block text-[11px] font-bold text-teal-800 bg-teal-100 px-2.5 py-0.5 rounded-full mb-3">
+                    Sample Demo Data • Elder
+                  </span>
+                  <h4 className="font-extrabold text-base text-slate-900 mb-2">
+                    Eleanor Vance (Elder Owner)
+                  </h4>
+                  <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                    Manages 4 active daily medications, tracks adherence with a 96% weekly score, and can activate Easy Mode for high-contrast, 24px+ simplified navigation.
+                  </p>
+                </div>
+                <div className="pt-3 border-t border-slate-200/60 text-[11px] text-slate-500 font-medium">
+                  Features: Easy Mode, Voice check-in, Passcode approval
                 </div>
               </div>
 
-              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="text-amber-400 text-lg mb-3">★★★★★</div>
-                <p className="text-sm text-slate-700 italic leading-relaxed mb-4">
-                  &ldquo;As a geriatric cardiologist, patient non-adherence is my biggest battle. CareConnect&apos;s
-                  pattern detector and 24-hour appointment reminders have drastically improved follow-up rates.&rdquo;
-                </p>
+              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
                 <div>
-                  <h4 className="font-bold text-sm text-slate-900">Dr. Sarah Jenkins, MD</h4>
-                  <span className="text-xs text-slate-500">Chief of Cardiology • City General</span>
+                  <span className="inline-block text-[11px] font-bold text-indigo-800 bg-indigo-100 px-2.5 py-0.5 rounded-full mb-3">
+                    Sample Demo Data • Caregiver
+                  </span>
+                  <h4 className="font-extrabold text-base text-slate-900 mb-2">
+                    Marcus Vance (Family Editor)
+                  </h4>
+                  <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                    Receives automated +15m and +60m missed-dose alerts, monitors pharmacy refill depletion predictions, and schedules clinic follow-ups.
+                  </p>
+                </div>
+                <div className="pt-3 border-t border-slate-200/60 text-[11px] text-slate-500 font-medium">
+                  Features: 2-stage escalation, Refill alerts, .ics export
                 </div>
               </div>
 
-              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="text-amber-400 text-lg mb-3">★★★★★</div>
-                <p className="text-sm text-slate-700 italic leading-relaxed mb-4">
-                  &ldquo;The Hindi and Tamil language support allowed my grandmother to use the app independently.
-                  The speech synthesis voice prompts make taking medication feel reassuring and natural.&rdquo;
-                </p>
+              <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
                 <div>
-                  <h4 className="font-bold text-sm text-slate-900">Priya Raman</h4>
-                  <span className="text-xs text-slate-500">Granddaughter & Care Circle Editor</span>
+                  <span className="inline-block text-[11px] font-bold text-amber-800 bg-amber-100 px-2.5 py-0.5 rounded-full mb-3">
+                    Sample Demo Data • Clinician
+                  </span>
+                  <h4 className="font-extrabold text-base text-slate-900 mb-2">
+                    Dr. Anita Patel, MD (Clinician)
+                  </h4>
+                  <p className="text-xs text-slate-600 leading-relaxed mb-4">
+                    Monitors medication compliance across linked seniors, reviews daily health check-in summaries, and exports appointments directly to .ics calendars.
+                  </p>
+                </div>
+                <div className="pt-3 border-t border-slate-200/60 text-[11px] text-slate-500 font-medium">
+                  Features: Clinical oversight, Adherence heatmap, Audit trail
                 </div>
               </div>
             </div>
@@ -405,28 +429,60 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="bg-slate-900 text-white py-12 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-primary-600 text-white flex items-center justify-center font-extrabold text-sm">
-              C+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-primary-600 text-white flex items-center justify-center font-extrabold text-sm">
+                C+
+              </div>
+              <span className="font-extrabold text-lg tracking-tight">CareConnect</span>
+              <span className="text-xs text-slate-400 border-l border-slate-700 pl-3">
+                Elderly Care & Medication Management Platform
+              </span>
             </div>
-            <span className="font-extrabold text-lg tracking-tight">CareConnect</span>
-            <span className="text-xs text-slate-400 border-l border-slate-700 pl-3">
-              Elderly Care & Medication Management Platform
-            </span>
+
+            <div className="flex flex-wrap items-center gap-5 text-xs text-slate-400">
+              <Link href="/dashboard" className="hover:text-white transition">Dashboard</Link>
+              <Link href="/appointments" className="hover:text-white transition">Appointments</Link>
+              <Link href="/medications" className="hover:text-white transition">Medications</Link>
+              <Link href="/checkin" className="hover:text-white transition">Health Check-In</Link>
+              <Link href="/caregiver" className="hover:text-white transition">Caregiver Hub</Link>
+              <a
+                href="https://github.com/Niswan028/catalyst"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-white transition font-semibold text-primary-400"
+              >
+                GitHub Repository ↗
+              </a>
+            </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-6 text-xs text-slate-400">
-            <Link href="/dashboard" className="hover:text-white transition">Dashboard</Link>
-            <Link href="/appointments" className="hover:text-white transition">Appointments</Link>
-            <Link href="/medications" className="hover:text-white transition">Medications</Link>
-            <Link href="/checkin" className="hover:text-white transition">Health Check-In</Link>
-            <Link href="/caregiver" className="hover:text-white transition">Caregiver Hub</Link>
+          <div className="border-t border-slate-800 pt-6 space-y-2 text-xs text-slate-300">
+            <p>
+              <strong className="text-white font-semibold">Medical Disclaimer:</strong> CareConnect is an organizational schedule reminder and family coordination platform. It does not provide medical diagnosis, clinical treatment advice, or emergency services. Always consult a licensed healthcare provider for prescription instructions.
+            </p>
+            <p>
+              <strong className="text-white font-semibold">Privacy & Security:</strong> Passcodes are securely hashed with bcrypt (10 rounds). Sample accounts are isolated for evaluation.
+            </p>
+            <p>
+              <strong className="text-white font-semibold">Acknowledgements:</strong> Built on the open-source foundation by{' '}
+              <a
+                href="https://github.com/S4DIB/careconnect"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline hover:text-white transition"
+              >
+                S4DIB
+              </a>
+              .
+            </p>
           </div>
 
-          <p className="text-xs text-slate-500">
-            © 2026 CareConnect Platform. Built strictly to WCAG 2.1 AA standards.
-          </p>
+          <div className="border-t border-slate-800/60 pt-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
+            <p>© 2026 CareConnect Platform. Designed for WCAG 2.1 AA accessibility standards.</p>
+            <p className="text-[11px] text-slate-400">Sample evaluation data pre-configured for review.</p>
+          </div>
         </div>
       </footer>
     </div>

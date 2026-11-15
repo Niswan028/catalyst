@@ -1,0 +1,68 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Gradient -->
+  <rect width="1200" height="630" fill="url(#bg-gradient)" />
+  
+  <!-- Subtle Ambient Glows -->
+  <circle cx="150" cy="120" r="280" fill="#0d9488" opacity="0.25" filter="blur(80px)" />
+  <circle cx="1050" cy="500" r="320" fill="#0f766e" opacity="0.3" filter="blur(90px)" />
+  <circle cx="600" cy="300" r="200" fill="#14b8a6" opacity="0.1" filter="blur(60px)" />
+
+  <defs>
+    <linearGradient id="bg-gradient" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#042f2e" />
+      <stop offset="50%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+  </defs>
+
+  <!-- Container Border -->
+  <rect x="40" y="40" width="1120" height="550" rx="32" stroke="#14b8a6" stroke-opacity="0.25" stroke-width="2" />
+
+  <!-- Logo Mark -->
+  <g transform="translate(100, 110)">
+    <rect width="72" height="72" rx="20" fill="#0d9488" />
+    <text x="36" y="48" font-family="system-ui, -apple-system, sans-serif" font-size="34" font-weight="900" fill="#ffffff" text-anchor="middle">C+</text>
+  </g>
+
+  <!-- Platform Badge -->
+  <g transform="translate(195, 126)">
+    <rect width="360" height="40" rx="20" fill="#134e4a" stroke="#2dd4bf" stroke-width="1.5" />
+    <circle cx="24" cy="20" r="6" fill="#10b981" />
+    <text x="44" y="25" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#ccfbf1" letter-spacing="0.5">ELDERLY CARE &amp; MEDICATION PLATFORM</text>
+  </g>
+
+  <!-- Main Headline -->
+  <text x="100" y="270" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="900" fill="#ffffff" letter-spacing="-1.5">
+    CareConnect
+  </text>
+  <text x="100" y="340" font-family="system-ui, -apple-system, sans-serif" font-size="40" font-weight="700" fill="#2dd4bf">
+    Smarter Medication Schedules. Elder-Centric Care.
+  </text>
+
+  <!-- Feature Description -->
+  <text x="100" y="410" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="500" fill="#94a3b8">
+    Passcode-protected family circles, proactive multi-tier email reminders, and doctor appointment scheduling.
+  </text>
+  <text x="100" y="445" font-family="system-ui, -apple-system, sans-serif" font-size="22" font-weight="500" fill="#94a3b8">
+    Designed for WCAG 2.1 AA accessibility with high-contrast Easy Mode and multilingual support.
+  </text>
+
+  <!-- Feature Pills -->
+  <g transform="translate(100, 490)">
+    <!-- Pill 1 -->
+    <rect x="0" y="0" width="220" height="44" rx="22" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+    <text x="110" y="27" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#e2e8f0" text-anchor="middle">🔐 Passcode Circles</text>
+
+    <!-- Pill 2 -->
+    <rect x="236" y="0" width="240" height="44" rx="22" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+    <text x="356" y="27" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#e2e8f0" text-anchor="middle">🚨 2-Stage Escalations</text>
+
+    <!-- Pill 3 -->
+    <rect x="492" y="0" width="220" height="44" rx="22" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+    <text x="602" y="27" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#e2e8f0" text-anchor="middle">👓 Elder Easy Mode</text>
+
+    <!-- Pill 4 -->
+    <rect x="728" y="0" width="260" height="44" rx="22" fill="#1e293b" stroke="#334155" stroke-width="1.5" />
+    <text x="858" y="27" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700" fill="#e2e8f0" text-anchor="middle">🌐 English • हिन्दी • தமிழ்</text>
+  </g>
+</svg>

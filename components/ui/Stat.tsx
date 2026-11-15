@@ -53,7 +53,7 @@ export function Stat({
       </div>
 
       {description && (
-        <p className="text-xs text-slate-400 mt-1 font-medium">{description}</p>
+        <p className="text-xs text-slate-600 mt-1 font-medium">{description}</p>
       )}
     </div>
   );

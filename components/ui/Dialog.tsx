@@ -67,14 +67,14 @@ export function Dialog({
               {title}
             </h2>
             {description && (
-              <p id="dialog-description" className="text-sm text-slate-500 mt-1">
+              <p id="dialog-description" className="text-sm text-slate-600 dark:text-slate-300 mt-1">
                 {description}
               </p>
             )}
           </div>
           <button
             onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 hover:bg-slate-100 p-2 rounded-xl transition min-w-[36px] min-h-[36px] flex items-center justify-center"
+            className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 p-2 rounded-xl transition min-w-[36px] min-h-[36px] flex items-center justify-center"
             aria-label="Close dialog"
           >
             ✕

@@ -43,7 +43,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         )}
         <div className="relative flex items-center">
           {leftIcon && (
-            <div className="absolute left-3.5 text-slate-400 pointer-events-none flex items-center">
+            <div className="absolute left-3.5 text-slate-500 pointer-events-none flex items-center">
               {leftIcon}
             </div>
           )}
@@ -52,7 +52,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? errorId : helperText ? helperId : undefined}
-            className={`w-full min-h-[44px] rounded-xl border bg-white px-3.5 py-2.5 text-slate-900 text-base placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all duration-200 ${
+            className={`w-full min-h-[44px] rounded-xl border bg-white px-3.5 py-2.5 text-slate-900 text-base placeholder:text-slate-500 focus:outline-none focus:ring-2 transition-all duration-200 ${
               leftIcon ? 'pl-10' : ''
             } ${rightIcon ? 'pr-10' : ''} ${
               error
@@ -62,7 +62,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             {...props}
           />
           {rightIcon && (
-            <div className="absolute right-3.5 text-slate-400 flex items-center">
+            <div className="absolute right-3.5 text-slate-500 flex items-center">
               {rightIcon}
             </div>
           )}

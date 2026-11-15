@@ -4,6 +4,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Card, Stat } from '@/components/ui';
+import { Icons } from '@/components/ui/icons';
 import LoadingSpinner from '@/components/LoadingSpinner';
 import FamilyCircleModal from '@/components/FamilyCircleModal';
 import UpcomingAppointmentsWidget from '@/components/UpcomingAppointmentsWidget';
@@ -121,19 +122,19 @@ export default function DashboardPage() {
             <Stat
               label="Active Prescriptions"
               value={medications.length}
-              icon="💊"
+              icon={<Icons.Medications size={18} className="text-primary-700" />}
               description="Scheduled across today"
             />
             <Stat
               label="Next Dose"
               value={upcomingMed ? upcomingMed.time : 'None'}
-              icon="⏰"
+              icon={<Icons.Clock size={18} className="text-amber-600" />}
               description={upcomingMed ? `${upcomingMed.name} (${upcomingMed.dosage})` : 'All clear for now'}
             />
             <Stat
               label="Today's Check-In"
               value={summary ? 'Completed' : 'Pending'}
-              icon="🩺"
+              icon={<Icons.Checkin size={18} className="text-teal-600" />}
               description={summary?.mood_summary ? `Mood: ${summary.mood_summary}` : 'Share how you feel'}
             />
             <Stat
@@ -143,10 +144,10 @@ export default function DashboardPage() {
                   ? `${summary.medication_adherence_rate.toFixed(0)}%`
                   : 'No data yet'
               }
-              icon="📊"
+              icon={<Icons.Activity size={18} className="text-emerald-600" />}
               trend={
                 summary?.medication_adherence_rate
-                  ? { value: '7-day streak', isPositive: true }
+                  ? { value: `${summary.medication_adherence_rate >= 80 ? 'Optimal' : 'Needs attention'}`, isPositive: summary.medication_adherence_rate >= 80 }
                   : undefined
               }
             />

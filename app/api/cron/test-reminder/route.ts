@@ -8,24 +8,31 @@ import {
   getWeeklyDigestEmail,
 } from '@/lib/email/templates';
 import { triggerTestReminderSchema } from '@/features/notifications/schemas';
+import { checkRateLimit, recordFailedAttempt, DEMO_RATE_LIMIT_CONFIG } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
-    // Only enabled in non-production environments for demonstration/testing
-    if (process.env.NODE_ENV === 'production') {
-      return NextResponse.json(
-        { error: 'Test reminder trigger is disabled in production.' },
-        { status: 403 }
-      );
-    }
-
     const authResult = await getAuthenticatedContext(request);
     if ('error' in authResult) {
       return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
     const { user } = authResult;
+
+    // Rate-limit test reminders per user (5 per 5 minutes)
+    const rateLimitKey = `test_reminder:${user.id}`;
+    const limitStatus = checkRateLimit(rateLimitKey, DEMO_RATE_LIMIT_CONFIG);
+    if (!limitStatus.allowed) {
+      return NextResponse.json(
+        {
+          error: `Test reminder rate limit exceeded. Please wait ${Math.ceil(
+            limitStatus.retryAfterSeconds / 60
+          )} minutes before triggering another test email.`,
+        },
+        { status: 429 }
+      );
+    }
 
     const body = await request.json().catch(() => ({}));
     const validated = triggerTestReminderSchema.safeParse(body);
@@ -36,11 +43,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { type, target_email } = validated.data;
-    const recipientEmail = target_email || user.email;
+    const { type } = validated.data;
+    // Security constraint: Send test emails ONLY to the authenticated demo user's own email
+    const recipientEmail = user.email;
 
     if (!recipientEmail) {
-      return NextResponse.json({ error: 'Recipient email is required' }, { status: 400 });
+      return NextResponse.json({ error: 'Authenticated user email is required' }, { status: 400 });
     }
 
     let emailData: { subject: string; html: string; text?: string };
@@ -134,4 +142,14 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : 'Failed to send test reminder';
     return NextResponse.json({ error: message }, { status: 500 });
   }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    endpoint: '/api/cron/test-reminder',
+    method: 'POST',
+    description: 'Trigger a test reminder email for the authenticated demo account.',
+    allowedTypes: ['upcoming_dose', 'missed_dose', 'appointment', 'weekly_digest'],
+    instructions: 'Send an authenticated POST request from the Demo Guide or Dashboard test trigger.',
+  });
 }

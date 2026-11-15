@@ -92,7 +92,7 @@ export function Toast({
             setIsVisible(false);
             onClose();
           }}
-          className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 p-1 -mr-1 -mt-1 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary-500"
+          className="text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white p-1 -mr-1 -mt-1 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-primary-500"
           aria-label="Dismiss notification"
         >
           ✕

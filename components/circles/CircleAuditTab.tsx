@@ -32,15 +32,15 @@ export default function CircleAuditTab({ auditLogs }: CircleAuditTabProps) {
             <span className="font-bold uppercase tracking-wider text-primary-700 bg-primary-50 px-2 py-0.5 rounded border border-primary-200">
               {log.action?.replace(/_/g, ' ') || 'ACTION'}
             </span>
-            <span className="text-gray-400">
+            <span className="text-gray-600 font-semibold">
               {new Date(log.created_at).toLocaleString()}
             </span>
           </div>
-          <p className="text-gray-700 mt-1">
+          <p className="text-gray-800 mt-1">
             <strong>Actor:</strong> {log.actor?.full_name || log.actor?.email || 'System / Elder'}
           </p>
           {log.details && (
-            <p className="text-gray-500 font-mono text-[11px] bg-white p-2 rounded border mt-1">
+            <p className="text-gray-700 font-mono text-[11px] bg-white p-2 rounded border mt-1">
               {JSON.stringify(log.details)}
             </p>
           )}

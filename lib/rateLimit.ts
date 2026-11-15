@@ -32,6 +32,12 @@ export const EMAIL_RATE_LIMIT_CONFIG: RateLimitConfig = {
   lockoutMs: 60 * 1000,
 };
 
+export const DEMO_RATE_LIMIT_CONFIG: RateLimitConfig = {
+  maxAttempts: 5,
+  windowMs: 5 * 60 * 1000,  // 5 requests per 5 minutes
+  lockoutMs: 5 * 60 * 1000,
+};
+
 /**
  * Check if an identifier is rate-limited
  */
