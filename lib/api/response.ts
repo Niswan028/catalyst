@@ -16,13 +16,17 @@ export interface ApiErrorResponse {
     message: string;
     details?: unknown;
   };
+  message?: string;
 }
 
 export function successResponse<T>(
   data: T,
   status = 200,
   meta?: ApiSuccessResponse<T>['meta']
-): NextResponse<ApiSuccessResponse<T>> {
+): NextResponse {
+  if (data && typeof data === 'object' && !Array.isArray(data)) {
+    return NextResponse.json({ data, ...data, meta }, { status });
+  }
   return NextResponse.json({ data, meta }, { status });
 }
 
@@ -39,6 +43,7 @@ export function errorResponse(
         message,
         details,
       },
+      message,
     },
     { status }
   );

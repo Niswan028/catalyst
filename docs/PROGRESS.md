@@ -51,11 +51,11 @@ This document tracks progress across all 11 phases of the hackathon engineering 
   - [x] Seed script (`scripts/seed.js` / `supabase/seed.sql`)
 
 ### Tier 2 (High Priority)
-- [ ] **Phase 6: Endpoint Audit & API Layer**
-  - [ ] Complete endpoint documentation in `docs/ENDPOINTS.md`
-  - [ ] Uniform API helpers in `lib/api` (`withAuth`, `withRole`, `validate`, `errorResponse`, `successResponse`)
-  - [ ] Uniform response shape: `{ data }` or `{ error: { code, message } }`
-  - [ ] Server-side role authorization & Zod validation across every route
+- [x] **Phase 6: Endpoint Audit & API Layer**
+  - [x] Complete endpoint documentation in `docs/ENDPOINTS.md`
+  - [x] Uniform API helpers in `lib/api` (`withAuth`, `withRole`, `validate`, `errorResponse`, `successResponse`)
+  - [x] Uniform response shape: `{ data }` or `{ error: { code, message } }`
+  - [x] Server-side role authorization & Zod validation across every route
 - [ ] **Phase 7: Security Hardening**
   - [ ] Strict RLS across all tables
   - [ ] Private storage bucket with expiring presigned URLs
@@ -96,7 +96,7 @@ This document tracks progress across all 11 phases of the hackathon engineering 
 - **Phase 3**: PASSED (zero-dose adherence "No data yet", .ics calendar exports with 24h/2h alarms, 74/74 tests green, build clean)
 - **Phase 4**: PASSED (server-side reminder engine, 2-stage missed dose escalation, 24h/2h appointment alarms, idempotency deduplication in notification_log, test reminder API & UI modal, 74/74 tests green, build clean)
 - **Phase 5**: PASSED (design system components Button, Card, Badge, Input, Select, Dialog, Tabs, Skeleton, EmptyState, Avatar, ProgressRing, Stat, Timeline; multi-language i18n support for en/hi/ta; responsive desktop/mobile nav; seed runner seeded 4 meds & 2 appts; 74/74 tests green, build clean)
-- **Phase 6**: Pending
+- **Phase 6**: PASSED (complete 27-endpoint matrix in docs/ENDPOINTS.md, withAuth, withCircleRole, validateBody/Query in lib/api, uniform { data } / { error } envelopes, 74/74 tests green, build clean)
 - **Phase 7**: Pending
 - **Phase 8**: Pending
 - **Phase 9**: Pending

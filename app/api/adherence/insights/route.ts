@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { getAuthenticatedContext, createServiceRoleClient } from '@/lib/supabase/authServer';
 import { generateAdherenceInsight } from '@/lib/adherence';
 import { predictAllRefills } from '@/lib/refillPrediction';
+import { successResponse, errorResponse } from '@/lib/api/response';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
   try {
     const authResult = await getAuthenticatedContext(request);
     if ('error' in authResult) {
-      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
+      return errorResponse('UNAUTHORIZED', authResult.error, authResult.status);
     }
     const { user } = authResult;
     const { searchParams } = new URL(request.url);
@@ -30,13 +31,14 @@ export async function GET(request: NextRequest) {
 
       const member = circle?.members?.find((m: any) => m.user_id === user.id);
       if (!member || member.status !== 'approved') {
-        return NextResponse.json({ error: 'Unauthorized to view this elder’s adherence data' }, { status: 403 });
+        return errorResponse('FORBIDDEN', 'Unauthorized to view this elder’s adherence data', 403);
       }
 
       if (member.permissions?.medications === false) {
-        return NextResponse.json(
-          { error: 'The elder has restricted access to medication and adherence records' },
-          { status: 403 }
+        return errorResponse(
+          'FORBIDDEN',
+          'The elder has restricted access to medication and adherence records',
+          403
         );
       }
     }
@@ -62,12 +64,12 @@ export async function GET(request: NextRequest) {
     const insight = generateAdherenceInsight(medications || [], logs || []);
     const refillPredictions = predictAllRefills(medications || []);
 
-    return NextResponse.json({
+    return successResponse({
       insight,
       refillPredictions,
     });
   } catch (error) {
     console.error('Error in GET /api/adherence/insights:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return errorResponse('INTERNAL_SERVER_ERROR', 'Internal server error', 500);
   }
 }
