@@ -38,16 +38,27 @@ export default function MessagesPage() {
         return;
       }
 
+      const initialUser: User = {
+        id: authUser.id,
+        email: authUser.email || '',
+        full_name: authUser.user_metadata?.full_name || authUser.email || 'User',
+        role: authUser.user_metadata?.role || 'elderly_user',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setUser(initialUser);
+
       const { data: userData } = await supabase
         .from('users')
         .select('*')
         .eq('id', authUser.id)
-        .single();
+        .maybeSingle();
 
-      setUser(userData);
+      const activeUser = userData || initialUser;
+      if (userData) setUser(userData);
       fetchMessages();
       
-      if (userData?.role === 'caregiver') {
+      if (activeUser.role === 'caregiver') {
         fetchLinkedUsers();
       } else {
         fetchCircleRecipients();
@@ -57,6 +68,7 @@ export default function MessagesPage() {
   }, [router]);
 
   const fetchMessages = async () => {
+    let timeoutId: NodeJS.Timeout | null = null;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -65,10 +77,14 @@ export default function MessagesPage() {
         return;
       }
 
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 4000);
+
       const response = await fetch('/api/messages', {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
         },
+        signal: controller.signal,
       });
       const data = await response.json();
       if (response.ok) {
@@ -79,6 +95,7 @@ export default function MessagesPage() {
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
+      if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
     }
   };

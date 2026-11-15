@@ -8,8 +8,7 @@ import { supabase } from '@/lib/supabase/client';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Card from '@/components/Card';
-
-type UserPersona = 'elder' | 'caregiver' | 'family';
+import { UserPersona, mapPersonaToDbRole, getPostAuthRedirect } from '@/lib/roles';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -20,6 +19,7 @@ export default function SignUpPage() {
     full_name: '',
   });
   const [error, setError] = useState('');
+  const [infoMessage, setInfoMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Check if user is already authenticated
@@ -30,7 +30,8 @@ export default function SignUpPage() {
       } = await supabase.auth.getSession();
 
       if (session) {
-        router.push('/dashboard');
+        const role = session.user.user_metadata?.role;
+        router.push(role === 'caregiver' ? '/caregiver' : '/dashboard');
       }
     };
 
@@ -40,7 +41,8 @@ export default function SignUpPage() {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
-        router.push('/dashboard');
+        const role = session.user.user_metadata?.role;
+        router.push(role === 'caregiver' ? '/caregiver' : '/dashboard');
       }
     });
 
@@ -66,6 +68,7 @@ export default function SignUpPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setInfoMessage('');
 
     const validationError = validateForm();
     if (validationError) {
@@ -75,35 +78,102 @@ export default function SignUpPage() {
 
     setLoading(true);
 
-    // Map UI persona to database role
-    const dbRole: 'elderly_user' | 'caregiver' =
-      persona === 'elder' ? 'elderly_user' : 'caregiver';
+    const dbRole = mapPersonaToDbRole(persona);
+    const trimmedEmail = formData.email.trim().toLowerCase();
+    const fullName = formData.full_name.trim();
 
     try {
+      // 1. Direct browser sign-up with metadata passed in options.data
+      const { data: clientData, error: clientError } = await supabase.auth.signUp({
+        email: trimmedEmail,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: fullName,
+            role: dbRole,
+            persona,
+          },
+        },
+      });
+
+      if (!clientError && clientData?.user) {
+        // When email already exists, Supabase returns empty identities array
+        if (clientData.user.identities && clientData.user.identities.length === 0) {
+          setError('An account with this email is already registered. Please sign in.');
+          return;
+        }
+
+        // If session exists immediately, user is logged in
+        if (clientData.session) {
+          document.cookie = `sb-access-token=${clientData.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
+          const target = getPostAuthRedirect(dbRole);
+          router.push(target);
+          router.refresh();
+          return;
+        }
+
+        // Email confirmation is required
+        setInfoMessage('Check your email to confirm your account, then sign in.');
+        return;
+      }
+
+      if (clientError) {
+        const lowerMsg = clientError.message.toLowerCase();
+        if (
+          lowerMsg.includes('already registered') ||
+          lowerMsg.includes('already been registered')
+        ) {
+          setError('An account with this email is already registered. Please sign in.');
+          return;
+        }
+        if (lowerMsg.includes('rate limit') || lowerMsg.includes('over_email_send_rate_limit')) {
+          setError(
+            'Email verification rate limit reached for this hour (Supabase free tier limit). If you already registered, please sign in. You can also explore instantly using the demo personas.'
+          );
+          return;
+        }
+      }
+
+      // 2. Fallback to API route
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ...formData,
-          email: formData.email.trim(),
+          email: trimmedEmail,
+          password: formData.password,
+          full_name: fullName,
           role: dbRole,
+          persona,
         }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to sign up');
+        throw new Error(data.error || 'Failed to create account');
       }
 
-      // If elder, suggest onboarding; otherwise route to signin
+      if (data.requiresConfirmation) {
+        setInfoMessage('Check your email to confirm your account, then sign in.');
+        return;
+      }
+
       const welcomeMsg = encodeURIComponent(
         `Welcome to CareConnect! Your ${persona} account has been created. Please sign in.`
       );
       router.push(`/auth/signin?message=${welcomeMsg}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to sign up';
-      setError(msg);
+      const lower = msg.toLowerCase();
+      if (lower.includes('rate limit') || lower.includes('over_email_send_rate_limit')) {
+        setError(
+          'Email verification rate limit reached for this hour (Supabase free tier limit). If you already registered, please sign in. You can also explore instantly using the demo personas.'
+        );
+      } else if (lower.includes('already registered') || lower.includes('already been registered')) {
+        setError('An account with this email is already registered. Please sign in.');
+      } else {
+        setError(msg);
+      }
     } finally {
       setLoading(false);
     }
@@ -131,13 +201,35 @@ export default function SignUpPage() {
             Create Your Account
           </h2>
 
+          {infoMessage && (
+            <div
+              className="bg-emerald-50 border border-emerald-300 text-emerald-900 px-4 py-3 rounded-xl mb-4 text-sm font-semibold flex items-center gap-2"
+              role="status"
+            >
+              <span>✉️</span>
+              <span>{infoMessage}</span>
+            </div>
+          )}
+
           {error && (
             <div
-              className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm font-semibold flex items-center gap-2"
+              className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm font-semibold flex items-start gap-2"
               role="alert"
             >
-              <span>🛑</span>
-              <span>{error}</span>
+              <span className="mt-0.5">🛑</span>
+              <div className="flex-1">
+                <p>{error}</p>
+                {(error.includes('already registered') || error.includes('rate limit')) && (
+                  <div className="mt-2 pt-2 border-t border-red-200 flex items-center gap-2">
+                    <Link
+                      href={`/auth/signin${formData.email ? `?email=${encodeURIComponent(formData.email.trim())}` : ''}`}
+                      className="text-xs font-bold text-red-800 underline hover:text-red-950 inline-flex items-center gap-1"
+                    >
+                      Sign in to your account →
+                    </Link>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
@@ -225,7 +317,7 @@ export default function SignUpPage() {
           </div>
 
           {/* Email/Password Form */}
-          <form onSubmit={handleSignUp} className="space-y-3.5">
+          <form onSubmit={handleSignUp} noValidate className="space-y-3.5">
             <Input
               label="Full Name"
               type="text"

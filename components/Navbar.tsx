@@ -9,7 +9,7 @@ import { SupportedLanguage, getTranslation } from '@/lib/i18n';
 import Avatar from './ui/Avatar';
 import { Icons } from './ui/icons';
 import RoleBadge from './RoleBadge';
-import { isClinicianUser } from '@/lib/permissions';
+import { isClinicianUser, isFamilyUser } from '@/lib/permissions';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -27,12 +27,24 @@ export default function Navbar() {
       } = await supabase.auth.getUser();
 
       if (authUser) {
+        setUser({
+          id: authUser.id,
+          email: authUser.email || '',
+          full_name: authUser.user_metadata?.full_name || authUser.email || 'User',
+          role: authUser.user_metadata?.role || 'elderly_user',
+          created_at: authUser.created_at || new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
         const { data } = await supabase
           .from('users')
           .select('*')
           .eq('id', authUser.id)
-          .single();
-        setUser(data);
+          .maybeSingle();
+
+        if (data) {
+          setUser(data);
+        }
       }
       setLoading(false);
     };
@@ -103,6 +115,7 @@ export default function Navbar() {
         ];
 
   const isClinician = isClinicianUser(activeUser);
+  const isFamily = isFamilyUser(activeUser);
 
   // Split links: Top 3 primary links visible on desktop header; remainder accessible via clean "More ▾" dropdown
   const primaryNavLinks = navLinks.slice(0, 3);
@@ -242,6 +255,7 @@ export default function Navbar() {
                     <RoleBadge
                       role={activeUser.role}
                       isClinician={isClinician}
+                      isFamily={isFamily}
                       size="xs"
                     />
                   </div>
@@ -285,9 +299,14 @@ export default function Navbar() {
               />
               <div>
                 <p className="text-xs font-bold text-stone-900 dark:text-stone-100">{activeUser.full_name || activeUser.email}</p>
-                <span className="text-[10px] font-semibold text-primary-800 bg-primary-50 dark:bg-primary-950 dark:text-primary-300 px-1.5 py-0.5 rounded">
-                  {activeUser.role === 'elderly_user' ? 'Elder Profile' : 'Caregiver'}
-                </span>
+                <div className="mt-0.5">
+                  <RoleBadge
+                    role={activeUser.role}
+                    isClinician={isClinician}
+                    isFamily={isFamily}
+                    size="xs"
+                  />
+                </div>
               </div>
             </div>
 

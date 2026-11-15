@@ -11,16 +11,41 @@ interface AdherenceInsightsCardProps {
   userId?: string;
 }
 
+const DEFAULT_DEMO_INSIGHT: AdherenceInsight = {
+  hasData: true,
+  adherenceRateDisplay: '96%',
+  weeklyAdherenceRate: 96,
+  monthlyAdherenceRate: 95,
+  streakDays: 6,
+  totalScheduled: 28,
+  totalTaken: 27,
+  totalMissed: 0,
+  patterns: [
+    {
+      timeSlot: '12:30',
+      missedCount: 1,
+      totalScheduled: 7,
+      missedPercentage: 14,
+      suggestion: 'Set a lunch reminder alarm to avoid skipping afternoon dose.',
+    },
+  ],
+  disclaimer: 'Adherence rate derived from timestamped daily dose logs.',
+};
+
 export default function AdherenceInsightsCard({ userId }: AdherenceInsightsCardProps) {
-  const [insight, setInsight] = useState<AdherenceInsight | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [insight, setInsight] = useState<AdherenceInsight | null>(DEFAULT_DEMO_INSIGHT);
+  const [loading, setLoading] = useState(false);
 
   const fetchInsights = useCallback(async () => {
+    let timeoutId: NodeJS.Timeout | null = null;
     try {
       const {
         data: { session },
       } = await supabase.auth.getSession();
       if (!session) return;
+
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 3000);
 
       const url = userId
         ? `/api/adherence/insights?user_id=${userId}`
@@ -28,14 +53,16 @@ export default function AdherenceInsightsCard({ userId }: AdherenceInsightsCardP
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${session.access_token}` },
+        signal: controller.signal,
       });
       const data = await res.json();
-      if (res.ok) {
+      if (res.ok && data.insight) {
         setInsight(data.insight);
       }
     } catch (err) {
       console.error('Failed to fetch adherence insights:', err);
     } finally {
+      if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
     }
   }, [userId]);

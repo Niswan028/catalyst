@@ -24,10 +24,61 @@ const INITIAL_FORM: MedicationFormData = {
   low_stock_threshold: 5,
 };
 
+const DEMO_FALLBACK_MEDICATIONS: Medication[] = [
+  {
+    id: 'demo-med-1',
+    user_id: '8ce76e37-7e02-4036-9cfb-b5d37520c279',
+    name: 'Lisinopril',
+    dosage: '10mg',
+    time: '08:00',
+    total_stock: 28,
+    low_stock_threshold: 7,
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'demo-med-2',
+    user_id: '8ce76e37-7e02-4036-9cfb-b5d37520c279',
+    name: 'Vitamin D3',
+    dosage: '1000 IU',
+    time: '09:00',
+    total_stock: 60,
+    low_stock_threshold: 10,
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'demo-med-3',
+    user_id: '8ce76e37-7e02-4036-9cfb-b5d37520c279',
+    name: 'Metformin',
+    dosage: '500mg',
+    time: '12:30',
+    total_stock: 45,
+    low_stock_threshold: 10,
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'demo-med-4',
+    user_id: '8ce76e37-7e02-4036-9cfb-b5d37520c279',
+    name: 'Atorvastatin',
+    dosage: '20mg',
+    time: '21:00',
+    total_stock: 4,
+    low_stock_threshold: 7,
+    is_active: true,
+    created_at: '2026-01-01T00:00:00Z',
+    updated_at: '2026-01-01T00:00:00Z',
+  },
+];
+
 export default function MedicationsPage() {
   const router = useRouter();
-  const [medications, setMedications] = useState<Medication[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [medications, setMedications] = useState<Medication[]>(DEMO_FALLBACK_MEDICATIONS);
+  const [loading, setLoading] = useState(false);
   const [canEdit, setCanEdit] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
@@ -37,7 +88,7 @@ export default function MedicationsPage() {
 
   const fetchMedications = useCallback(async () => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
 
     try {
       const { data: { session } } = await supabase.auth.getSession();

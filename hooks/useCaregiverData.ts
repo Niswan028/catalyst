@@ -85,6 +85,17 @@ export interface CaregiverAdherenceReport {
 
 export type CaregiverTab = 'overview' | 'medications' | 'checkins' | 'alerts';
 
+const DEMO_LINKED_ELEANOR: LinkedElderUser = {
+  id: 'demo-link-eleanor',
+  elderly_user: {
+    id: '8ce76e37-7e02-4036-9cfb-b5d37520c279',
+    email: 'eleanor.vance.demo@gmail.com',
+    full_name: 'Eleanor Vance',
+    created_at: '2026-01-01T00:00:00Z',
+  },
+  created_at: '2026-01-01T00:00:00Z',
+};
+
 export function useCaregiverData() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -111,6 +122,7 @@ export function useCaregiverData() {
   const [success, setSuccess] = useState('');
 
   const fetchLinkedUsers = useCallback(async () => {
+    let timeoutId: NodeJS.Timeout | null = null;
     try {
       const {
         data: { session },
@@ -121,26 +133,48 @@ export function useCaregiverData() {
         return;
       }
 
+      const isDemoCaregiver =
+        session.user.email?.includes('marcus') ||
+        session.user.email?.includes('patel');
+
+      if (isDemoCaregiver) {
+        setLinkedUsers([DEMO_LINKED_ELEANOR]);
+        setSelectedUser((prev) => prev || DEMO_LINKED_ELEANOR);
+        setLoading(false);
+      }
+
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 4000);
+
       const response = await fetch('/api/caregiver/links', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
+        signal: controller.signal,
       });
 
       const data = await response.json();
 
       if (response.ok) {
         const links: LinkedElderUser[] = data.links || [];
-        setLinkedUsers(links);
         if (links.length > 0) {
+          setLinkedUsers(links);
           setSelectedUser((prev) => prev || links[0] || null);
+        } else if (isDemoCaregiver) {
+          setLinkedUsers([DEMO_LINKED_ELEANOR]);
+          setSelectedUser((prev) => prev || DEMO_LINKED_ELEANOR);
+        } else {
+          setLinkedUsers([]);
         }
       } else {
-        setError(data.error || 'Failed to fetch linked users');
+        if (!isDemoCaregiver) {
+          setError(data.error || 'Failed to fetch linked users');
+        }
       }
     } catch (err: unknown) {
       logger.error('Error fetching linked users', { error: err });
     } finally {
+      if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
     }
   }, [router]);

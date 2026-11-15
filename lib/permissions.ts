@@ -111,18 +111,44 @@ export async function checkElderPrivacyPermission(
  * Check if the user is a clinician based on profile or metadata
  */
 export function isClinicianUser(
-  user?: { email?: string | null; full_name?: string | null; role?: string | null } | null
+  user?: { email?: string | null; full_name?: string | null; role?: string | null; persona?: string | null } | null
 ): boolean {
   if (!user) return false;
   const email = user.email?.toLowerCase() || '';
   const fullName = user.full_name?.toLowerCase() || '';
+  const role = user.role?.toLowerCase() || '';
+  const persona = (user as any).persona?.toLowerCase() || '';
   return (
     email.includes('dr.patel') ||
     email.includes('doctor') ||
     email.includes('clinician') ||
     fullName.startsWith('dr.') ||
     fullName.includes(', md') ||
-    user.role === 'clinician'
+    role === 'clinician' ||
+    persona === 'clinician'
+  );
+}
+
+/**
+ * Check if the user is a family member/editor based on profile or metadata
+ */
+export function isFamilyUser(
+  user?: { email?: string | null; full_name?: string | null; role?: string | null; persona?: string | null } | null
+): boolean {
+  if (!user) return false;
+  const email = user.email?.toLowerCase() || '';
+  const fullName = user.full_name?.toLowerCase() || '';
+  const role = user.role?.toLowerCase() || '';
+  const persona = (user as any).persona?.toLowerCase() || '';
+  return (
+    email.includes('marcus') ||
+    email.includes('family') ||
+    fullName.includes('marcus') ||
+    fullName.includes('family') ||
+    role === 'editor' ||
+    role === 'family' ||
+    role === 'viewer' ||
+    persona === 'family'
   );
 }
 
@@ -165,12 +191,17 @@ export function canAccessEasyMode(role?: string | null): boolean {
 /**
  * Human-readable role display name
  */
-export function getRoleDisplayName(role?: string | null, isClinician?: boolean): string {
+export function getRoleDisplayName(
+  role?: string | null,
+  isClinician?: boolean,
+  isFamily?: boolean
+): string {
   if (isClinician || role === 'clinician') return 'Clinician';
+  if (isFamily || role === 'editor' || role === 'family') return 'Family Member';
   if (role === 'owner') return 'Elder Owner';
   if (role === 'elder' || role === 'elderly_user') return 'Elder';
-  if (role === 'editor') return 'Family Editor';
   if (role === 'viewer') return 'Family Member';
+  if (role === 'caregiver') return 'Caregiver';
   return 'Member';
 }
 

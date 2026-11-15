@@ -16,11 +16,18 @@ export default function RefillPredictionWidget({ userId }: RefillPredictionWidge
   const [loading, setLoading] = useState(true);
 
   const fetchRefillPredictions = useCallback(async () => {
+    let timeoutId: NodeJS.Timeout | null = null;
     try {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        setLoading(false);
+        return;
+      }
+
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 3000);
 
       const url = userId
         ? `/api/adherence/insights?user_id=${userId}`
@@ -28,6 +35,7 @@ export default function RefillPredictionWidget({ userId }: RefillPredictionWidge
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${session.access_token}` },
+        signal: controller.signal,
       });
       const data = await res.json();
       if (res.ok) {
@@ -36,6 +44,7 @@ export default function RefillPredictionWidget({ userId }: RefillPredictionWidge
     } catch (err) {
       console.error('Failed to fetch refill predictions:', err);
     } finally {
+      if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
     }
   }, [userId]);

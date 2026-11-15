@@ -1,17 +1,20 @@
 // Sign in page with 1-Click Demo Evaluation Profiles
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase/client';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Card from '@/components/Card';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { getPostAuthRedirect } from '@/lib/roles';
 
-export default function SignInPage() {
+function SignInContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectParam = searchParams.get('redirect');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -85,7 +88,7 @@ export default function SignInPage() {
       if (!clientError && clientData?.session) {
         document.cookie = `sb-access-token=${clientData.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
         const userRole = clientData.user?.user_metadata?.role;
-        const targetRoute = userRole === 'caregiver' ? '/caregiver' : '/dashboard';
+        const targetRoute = getPostAuthRedirect(userRole, redirectParam);
         router.push(targetRoute);
         router.refresh();
         return;
@@ -111,13 +114,22 @@ export default function SignInPage() {
         document.cookie = `sb-access-token=${serverData.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
       }
 
-      const targetRoute = serverData.user?.role === 'caregiver' ? '/caregiver' : '/dashboard';
+      const targetRoute = getPostAuthRedirect(serverData.user?.role, redirectParam);
       router.push(targetRoute);
       router.refresh();
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to sign in';
+      const isInvalidCreds =
+        msg.toLowerCase().includes('invalid login credentials') ||
+        msg.toLowerCase().includes('invalid credentials') ||
+        msg.toLowerCase().includes('invalid email or password') ||
+        msg.toLowerCase().includes('wrong password') ||
+        msg.toLowerCase().includes('user not found');
+
       setError(
-        msg.includes('fetch failed')
+        isInvalidCreds
+          ? 'Invalid email or password. Please verify your credentials and try again.'
+          : msg.includes('fetch failed')
           ? 'Network connectivity issue. Please check your connection and retry.'
           : msg
       );
@@ -375,5 +387,19 @@ export default function SignInPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#f7f4ee] dark:bg-stone-950 flex items-center justify-center">
+          <LoadingSpinner size="lg" />
+        </div>
+      }
+    >
+      <SignInContent />
+    </Suspense>
   );
 }

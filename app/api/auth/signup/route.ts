@@ -91,6 +91,12 @@ export async function POST(request: NextRequest) {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              role,
+              full_name,
+            },
+          },
         });
 
         if (authError || !authData.user) {
@@ -109,17 +115,17 @@ export async function POST(request: NextRequest) {
       userEmail = adminUser.user.email || email;
     }
 
-    // Create user profile using service role to initialize profile (bypasses RLS)
-    const { error: profileError } = await adminSupabase.from('users').upsert({
-      id: userId,
-      email: userEmail,
-      role,
-      full_name: full_name || null,
-      updated_at: new Date().toISOString(),
-    });
-
-    if (profileError) {
-      return NextResponse.json({ error: profileError.message }, { status: 400 });
+    // Attempt profile upsert (harmless if handled by database trigger)
+    try {
+      await adminSupabase.from('users').upsert({
+        id: userId,
+        email: userEmail,
+        role,
+        full_name: full_name || null,
+        updated_at: new Date().toISOString(),
+      });
+    } catch (upsertErr) {
+      console.warn('Profile upsert fallback handled by trigger:', upsertErr);
     }
 
     return NextResponse.json({

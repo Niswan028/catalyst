@@ -6,6 +6,7 @@ import { getRoleDisplayName } from '@/lib/permissions';
 export interface RoleBadgeProps {
   role?: string | null;
   isClinician?: boolean;
+  isFamily?: boolean;
   className?: string;
   size?: 'xs' | 'sm' | 'md';
 }
@@ -13,29 +14,30 @@ export interface RoleBadgeProps {
 export default function RoleBadge({
   role = 'viewer',
   isClinician = false,
+  isFamily = false,
   className = '',
   size = 'sm',
 }: RoleBadgeProps) {
-  const displayName = getRoleDisplayName(role, isClinician);
+  const displayName = getRoleDisplayName(role, isClinician, isFamily);
 
   const isDoctor = isClinician || displayName === 'Clinician';
   const isElder = displayName === 'Elder' || displayName === 'Elder Owner';
-  const isEditor = displayName === 'Family Editor';
+  const isFamilyMember = isFamily || displayName === 'Family Member' || displayName === 'Family Editor';
 
   const colorStyles = isDoctor
-    ? 'bg-purple-50 text-purple-800 border-purple-200 dark:bg-purple-950/70 dark:text-purple-300 dark:border-purple-800'
+    ? 'bg-amber-50 text-amber-900 border-amber-300 dark:bg-amber-950/70 dark:text-amber-200 dark:border-amber-800'
     : isElder
     ? 'bg-teal-50 text-teal-800 border-teal-200 dark:bg-teal-950/70 dark:text-teal-300 dark:border-teal-800'
-    : isEditor
-    ? 'bg-sky-50 text-sky-800 border-sky-200 dark:bg-sky-950/70 dark:text-sky-300 dark:border-sky-800'
+    : isFamilyMember
+    ? 'bg-indigo-50 text-indigo-800 border-indigo-200 dark:bg-indigo-950/70 dark:text-indigo-300 dark:border-indigo-800'
     : 'bg-stone-100 text-stone-700 border-stone-200 dark:bg-stone-800 dark:text-stone-300 dark:border-stone-700';
 
   const dotColors = isDoctor
-    ? 'bg-purple-500'
+    ? 'bg-amber-600'
     : isElder
     ? 'bg-teal-500'
-    : isEditor
-    ? 'bg-sky-500'
+    : isFamilyMember
+    ? 'bg-indigo-500'
     : 'bg-stone-400';
 
   const sizeStyles =

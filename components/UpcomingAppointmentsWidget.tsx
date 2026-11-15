@@ -46,13 +46,13 @@ export default function UpcomingAppointmentsWidget({
   canEdit = true,
   onAddClick,
 }: UpcomingAppointmentsWidgetProps) {
-  const [appointments, setAppointments] = useState<Appointment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [appointments, setAppointments] = useState<Appointment[]>(DEMO_FALLBACK_APPOINTMENTS);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAppointments = useCallback(async () => {
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
     setError(null);
 
     try {

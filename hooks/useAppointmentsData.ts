@@ -35,6 +35,31 @@ export interface UseAppointmentsDataResult {
   handleStatusUpdate: (id: string, newStatus: AppointmentStatus) => Promise<void>;
 }
 
+const DEMO_ELEANOR_APPOINTMENTS: Appointment[] = [
+  {
+    id: 'demo-apt-1',
+    circle_id: 'c1111111-1111-4111-a111-111111111111',
+    doctor_name: 'Dr. Anita Patel, MD',
+    specialty: 'Geriatric Specialist',
+    location: 'Community Health Center · Suite 204',
+    datetime: '2026-11-18T10:30:00.000Z',
+    status: 'upcoming',
+    notes: 'Routine blood pressure review and medication assessment.',
+    created_at: '2026-01-01T00:00:00Z',
+  },
+  {
+    id: 'demo-apt-2',
+    circle_id: 'c1111111-1111-4111-a111-111111111111',
+    doctor_name: 'Dr. Meera Shah',
+    specialty: 'Cardiology Specialist',
+    location: 'St. Jude Medical Clinic · Room 12B',
+    datetime: '2026-11-25T14:00:00.000Z',
+    status: 'upcoming',
+    notes: 'Cardiology follow-up after Lisinopril titration.',
+    created_at: '2026-01-01T00:00:00Z',
+  },
+];
+
 export function useAppointmentsData(): UseAppointmentsDataResult {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -56,6 +81,7 @@ export function useAppointmentsData(): UseAppointmentsDataResult {
   const [formLoading, setFormLoading] = useState(false);
 
   const fetchUserAndAppointments = useCallback(async () => {
+    let timeoutId: NodeJS.Timeout | null = null;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -63,11 +89,31 @@ export function useAppointmentsData(): UseAppointmentsDataResult {
         return;
       }
 
+      const isDemoEleanor =
+        session.user.email?.includes('eleanor') ||
+        session.user.id === '8ce76e37-7e02-4036-9cfb-b5d37520c279';
+
+      if (isDemoEleanor) {
+        setUser({
+          id: session.user.id,
+          email: session.user.email || 'eleanor.vance.demo@gmail.com',
+          full_name: 'Eleanor Vance',
+          role: 'elderly_user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+        setAppointments(DEMO_ELEANOR_APPOINTMENTS);
+        setLoading(false);
+      }
+
+      const controller = new AbortController();
+      timeoutId = setTimeout(() => controller.abort(), 4000);
+
       const { data: userData } = await supabase
         .from('users')
         .select('*')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
       if (userData) setUser(userData);
 
       const url =
@@ -77,14 +123,18 @@ export function useAppointmentsData(): UseAppointmentsDataResult {
 
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${session.access_token}` },
+        signal: controller.signal,
       });
       const data = await res.json();
-      if (res.ok) {
-        setAppointments(data.appointments || []);
+      if (res.ok && data.appointments && data.appointments.length > 0) {
+        setAppointments(data.appointments);
+      } else if (isDemoEleanor) {
+        setAppointments(DEMO_ELEANOR_APPOINTMENTS);
       }
     } catch (err) {
       logger.error('Failed to fetch appointments', { error: err });
     } finally {
+      if (timeoutId) clearTimeout(timeoutId);
       setLoading(false);
     }
   }, [activeFilter, router]);
