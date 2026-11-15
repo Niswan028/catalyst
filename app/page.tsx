@@ -76,6 +76,13 @@ export default function HomePage() {
 
           <div className="flex items-center gap-3">
             <Link
+              href="/demo"
+              className="text-xs sm:text-sm font-bold text-amber-800 bg-amber-100 hover:bg-amber-200 border border-amber-300 px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-xs"
+            >
+              <span>🏆</span>
+              <span>Judge Tour</span>
+            </Link>
+            <Link
               href="/auth/signin"
               className="text-xs sm:text-sm font-bold text-slate-700 hover:text-primary-700 px-3 py-2 rounded-lg transition"
             >
@@ -194,6 +201,55 @@ export default function HomePage() {
                 <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
                   Certified Accessibility
                 </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* How It Works in 3 Steps */}
+        <section className="py-16 bg-slate-50 border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="text-xs font-bold text-primary-700 uppercase tracking-widest block mb-1">
+                Simple & Trustworthy
+              </span>
+              <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                How CareConnect Works in 3 Steps
+              </h2>
+              <p className="text-sm text-slate-600 mt-2">
+                Designed to keep the elder in full control of their health without technical friction.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="bg-white p-7 rounded-2xl border border-slate-200/80 shadow-card text-center relative">
+                <div className="w-12 h-12 rounded-2xl bg-teal-100 text-teal-800 font-black text-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                  1
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Elder Generates Passcode</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  The elder generates a secure 6-8 character expiring passcode (e.g., CARE-2026). No complex email verification hurdles for elderly users.
+                </p>
+              </div>
+
+              <div className="bg-white p-7 rounded-2xl border border-slate-200/80 shadow-card text-center relative">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-800 font-black text-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                  2
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Family Joins & Elder Approves</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Family members or clinicians enter the passcode to request access. The elder approves each member and assigns Viewer or Editor roles.
+                </p>
+              </div>
+
+              <div className="bg-white p-7 rounded-2xl border border-slate-200/80 shadow-card text-center relative">
+                <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 font-black text-xl flex items-center justify-center mx-auto mb-4 shadow-sm">
+                  3
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 mb-2">Proactive Care & Reminders</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Proactive email reminders alert the elder before doses. If missed, automatic escalations alert the family at +15m and +60m.
+                </p>
               </div>
             </div>
           </div>

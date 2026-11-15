@@ -1,21 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getAuthenticatedContext, AuthenticatedContext } from '../supabase/authServer';
 import { errorResponse } from './response';
-
-export type CircleRole = 'owner' | 'elder' | 'editor' | 'viewer';
+import { CircleRole } from '../types';
+import { RouteParamsContext } from './withAuth';
 
 /**
- * Higher-order function requiring circle membership with specific role(s)
+ * Higher-order function requiring circle membership with specific role(s).
+ *
+ * @param allowedRoles - List of roles permitted to access the handler
+ * @param handler - Next.js route handler function
  */
 export function withCircleRole(
   allowedRoles: CircleRole[],
   handler: (
     request: NextRequest,
     context: AuthenticatedContext & { circleRole: CircleRole; circleId: string },
-    routeParams?: any
+    routeParams?: RouteParamsContext
   ) => Promise<NextResponse>
 ) {
-  return async (request: NextRequest, routeParams?: any): Promise<NextResponse> => {
+  return async (request: NextRequest, routeParams?: RouteParamsContext): Promise<NextResponse> => {
     const authResult = await getAuthenticatedContext(request);
     if ('error' in authResult) {
       return errorResponse('UNAUTHORIZED', authResult.error, authResult.status);
@@ -26,8 +29,8 @@ export function withCircleRole(
     // Extract circleId from routeParams, query params, or header
     const { searchParams } = new URL(request.url);
     const circleId =
-      routeParams?.params?.id ||
-      routeParams?.params?.circle_id ||
+      (routeParams?.params?.id as string) ||
+      (routeParams?.params?.circle_id as string) ||
       searchParams.get('circle_id') ||
       request.headers.get('x-circle-id');
 

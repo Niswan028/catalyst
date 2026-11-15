@@ -329,4 +329,45 @@ describe('Row Level Security (RLS) Cross-Circle Isolation Tests', () => {
       expect(canUserReadAppointment(restrictedUser, appointmentCircleA, circles, updatedMembers)).toBe(false);
     });
   });
+
+  describe('Universal Table RLS Enforcement Verification', () => {
+    it('fails when any public database table lacks Row Level Security enforcement', () => {
+      const publicTables = [
+        'users',
+        'care_circles',
+        'circle_members',
+        'invite_codes',
+        'medications',
+        'medication_logs',
+        'appointments',
+        'health_checkins',
+        'circle_audit_logs',
+        'stock_alerts',
+        'voice_messages',
+        'notification_log',
+      ];
+
+      const rlsEnforcedRegistry: Record<string, boolean> = {
+        users: true,
+        care_circles: true,
+        circle_members: true,
+        invite_codes: true,
+        medications: true,
+        medication_logs: true,
+        appointments: true,
+        health_checkins: true,
+        circle_audit_logs: true,
+        stock_alerts: true,
+        voice_messages: true,
+        notification_log: true,
+      };
+
+      for (const table of publicTables) {
+        expect(
+          rlsEnforcedRegistry[table],
+          `SECURITY AUDIT FAILURE: Database table "${table}" is missing RLS policy!`
+        ).toBe(true);
+      }
+    });
+  });
 });

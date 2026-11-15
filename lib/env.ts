@@ -20,9 +20,13 @@ function parseEnv(): Env {
   // During CI or static build with dummy/placeholder fallback
   const rawEnv = {
     NEXT_PUBLIC_SUPABASE_URL:
-      process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
+      process.env.NEXT_PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL.includes('placeholder')
+        ? process.env.NEXT_PUBLIC_SUPABASE_URL
+        : 'https://ngfzyzznryeoliodkvtd.supabase.co',
     NEXT_PUBLIC_SUPABASE_ANON_KEY:
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY && !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY.includes('placeholder')
+        ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        : 'sb_publishable_LV9Pw_b8LNXC8GdN4Ukrxg_3RjZbIG7',
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     CRON_SECRET: process.env.CRON_SECRET,
     EMAIL_FROM: process.env.EMAIL_FROM || 'CareConnect Alerts <alerts@careconnect.app>',

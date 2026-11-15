@@ -5,6 +5,8 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase/client';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import { logger } from '@/lib/logger';
+import { getErrorMessage } from '@/lib/errors';
 
 function CallbackContent() {
   const router = useRouter();
@@ -61,7 +63,7 @@ function CallbackContent() {
         
         let handled = false;
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-          console.log('Auth event:', event, newSession?.user?.email);
+          logger.debug('Auth event on callback', { event, email: newSession?.user?.email });
           
           if (!handled && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && newSession) {
             handled = true;
@@ -79,14 +81,14 @@ function CallbackContent() {
           }
         }, 5000);
 
-      } catch (err: any) {
-        console.error('Callback error:', err);
-        setError(err.message || 'Authentication failed');
+      } catch (err: unknown) {
+        logger.error('Callback error', { error: err });
+        setError(getErrorMessage(err, 'Authentication failed'));
         setTimeout(() => router.push('/auth/signin'), 3000);
       }
     };
 
-    const setupUserProfile = async (user: any) => {
+    const setupUserProfile = async (user: { id: string; email?: string; user_metadata?: Record<string, any> }) => {
       try {
         setStatus('Session found, setting up profile...');
 
@@ -105,7 +107,7 @@ function CallbackContent() {
           
           pendingRole = urlRole || localRole || sessionRole;
           
-          console.log('Role detection:', { urlRole, localRole, sessionRole, pendingRole });
+          logger.debug('Role detection on callback', { urlRole, localRole, sessionRole, pendingRole });
           
           // Clean up storage
           localStorage.removeItem('pending_role');
@@ -120,7 +122,7 @@ function CallbackContent() {
           .single();
 
         if (fetchError && fetchError.code !== 'PGRST116') {
-          console.error('Fetch user error:', fetchError);
+          logger.error('Fetch user error', { error: fetchError });
         }
 
         if (!existingUser) {
@@ -133,18 +135,18 @@ function CallbackContent() {
             id: user.id,
             email: user.email!,
             role: role as 'elderly_user' | 'caregiver',
-            full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+            full_name: (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || null,
           });
 
           if (insertError) {
-            console.error('Insert user error:', insertError);
+            logger.error('Insert user error', { error: insertError });
           } else {
-            console.log('User profile created with role:', role);
+            logger.info('User profile created with role', { role });
           }
         } else if (pendingRole && existingUser.role !== pendingRole) {
           // User exists but signed up with different role - update it
           setStatus('Updating your role...');
-          console.log('Updating role from', existingUser.role, 'to', pendingRole);
+          logger.info('Updating role', { from: existingUser.role, to: pendingRole });
           
           const { error: updateError } = await supabase
             .from('users')
@@ -152,9 +154,9 @@ function CallbackContent() {
             .eq('id', user.id);
           
           if (updateError) {
-            console.error('Update role error:', updateError);
+            logger.error('Update role error', { error: updateError });
           } else {
-            console.log('Role updated to:', pendingRole);
+            logger.info('Role updated', { role: pendingRole });
           }
         }
 

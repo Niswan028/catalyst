@@ -1,16 +1,40 @@
-// Elder privacy controls and permission verification
-import { SupabaseClient } from '@supabase/supabase-js';
+/**
+ * Elder privacy controls and permission verification.
+ * Evaluates circle memberships and granular visibility toggles per resource.
+ */
 
-export type PrivacyResourceType = 'medications' | 'appointments' | 'health_checkins' | 'voice_messages';
+import { SupabaseClient } from '@supabase/supabase-js';
+import { CircleRole } from './types';
+
+export type PrivacyResourceType =
+  | 'medications'
+  | 'appointments'
+  | 'health_checkins'
+  | 'voice_messages'
+  | 'insights';
 
 export interface PermissionCheckResult {
   allowed: boolean;
-  role?: 'elder' | 'editor' | 'viewer';
+  role?: CircleRole;
   reason?: string;
 }
 
+interface CircleMemberRecord {
+  id: string;
+  user_id: string;
+  role: CircleRole;
+  status: string;
+  permissions?: Record<string, boolean>;
+}
+
 /**
- * Verify whether a requester can access a specific resource of an elder
+ * Verify whether a requester can access a specific resource of an elder.
+ *
+ * @param supabase - Authenticated Supabase client
+ * @param requesterId - UUID of the requesting user
+ * @param elderId - UUID of the elder patient
+ * @param resource - Specific resource category being accessed
+ * @returns Permission check verdict and active role
  */
 export async function checkElderPrivacyPermission(
   supabase: SupabaseClient,
@@ -41,8 +65,9 @@ export async function checkElderPrivacyPermission(
     .maybeSingle();
 
   if (circle?.members) {
-    const member = circle.members.find(
-      (m: any) => m.user_id === requesterId && m.status === 'approved'
+    const membersList = circle.members as CircleMemberRecord[];
+    const member = membersList.find(
+      (m) => m.user_id === requesterId && (m.status === 'approved' || m.status === 'active')
     );
 
     if (member) {

@@ -2,6 +2,7 @@
 'use client';
 
 import { useState, useRef, useCallback } from 'react';
+import { logger } from '@/lib/logger';
 
 export function useAudioRecorder() {
   const [isRecording, setIsRecording] = useState(false);
@@ -50,8 +51,7 @@ export function useAudioRecorder() {
       mediaRecorderRef.current = mediaRecorder;
       chunksRef.current = [];
       
-      console.log('Recording with MIME type:', mimeType);
-      console.log('MediaRecorder options:', options);
+      logger.debug('Recording with MIME type', { mimeType, options });
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {

@@ -1,5 +1,6 @@
 // Server-side email dispatcher using Nodemailer (SMTP / Resend compatible)
 import nodemailer, { Transporter } from 'nodemailer';
+import { logger } from '@/lib/logger';
 
 export interface SendEmailOptions {
   to: string | string[];
@@ -67,7 +68,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
     const isMock = !process.env.SMTP_HOST && !process.env.RESEND_API_KEY;
 
     if (isMock) {
-      console.log(`[Email Service - Dev Mock] Sent email to: ${to} | Subject: "${options.subject}"`);
+      logger.info(`[Email Service - Dev Mock] Sent email`, { to, subject: options.subject });
     }
 
     return {
@@ -77,7 +78,7 @@ export async function sendEmail(options: SendEmailOptions): Promise<SendEmailRes
     };
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to send email';
-    console.error('Email sending error:', error);
+    logger.error('Email sending error', { error });
     return {
       success: false,
       error: message,

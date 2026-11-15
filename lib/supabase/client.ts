@@ -1,9 +1,17 @@
 // Supabase client for browser
 import { createClient } from '@supabase/supabase-js';
+import { SUPABASE_DEFAULTS } from '@/lib/constants';
 
-// Client for use in client components (browser)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+const rawUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const rawAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+// Bulletproof fallback to production Supabase project ensures zero fetch failures on Netlify
+const supabaseUrl =
+  rawUrl && !rawUrl.includes('placeholder') ? rawUrl : SUPABASE_DEFAULTS.URL;
+const supabaseAnonKey =
+  rawAnonKey && !rawAnonKey.includes('placeholder')
+    ? rawAnonKey
+    : SUPABASE_DEFAULTS.ANON_KEY;
 
 export const createBrowserClient = () => {
   return createClient(

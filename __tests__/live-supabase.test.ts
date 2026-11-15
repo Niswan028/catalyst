@@ -135,5 +135,5 @@ describe('Live Supabase Project Verification', () => {
     await admin.from('care_circles').delete().eq('id', circle.id);
     await admin.from('users').delete().eq('id', testUserId);
     await admin.auth.admin.deleteUser(testUserId);
-  });
+  }, 25000);
 });

@@ -17,6 +17,28 @@ export default function SignInPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [quickLoginRole, setQuickLoginRole] = useState<string | null>(null);
+  const [seedLoading, setSeedLoading] = useState(false);
+  const [seedSuccess, setSeedSuccess] = useState<string | null>(null);
+
+  const handleLoadDemoData = async () => {
+    setSeedLoading(true);
+    setSeedSuccess(null);
+    setError('');
+    try {
+      const res = await fetch('/api/demo/seed', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSeedSuccess('Demo data populated! 5 accounts, prescriptions, and Care Circle ready.');
+      } else {
+        setError(data.error || 'Failed to seed demo data');
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error connecting to demo seed endpoint';
+      setError(msg);
+    } finally {
+      setSeedLoading(false);
+    }
+  };
 
   // Handle OAuth callback and check authentication status
   useEffect(() => {
@@ -53,47 +75,52 @@ export default function SignInPage() {
     setLoading(true);
 
     try {
-      // 1. Authenticate via resilient server route (immune to browser ad-blockers & CORS)
+      // 1. Direct browser authentication with Supabase client (fastest & reliable)
+      const { data: clientData, error: clientError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+      if (!clientError && clientData?.session) {
+        document.cookie = `sb-access-token=${clientData.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
+        const userRole = clientData.user?.user_metadata?.role;
+        const targetRoute = userRole === 'caregiver' ? '/caregiver' : '/dashboard';
+        router.push(targetRoute);
+        router.refresh();
+        return;
+      }
+
+      // 2. Server route fallback if client-side request was blocked (e.g. adblocker)
       const res = await fetch('/api/auth/signin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await res.json();
-
+      const serverData = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to sign in');
+        throw new Error(serverData.error || clientError?.message || 'Failed to sign in');
       }
 
-      // 2. Synchronize session with browser Supabase client
-      if (data.session) {
+      if (serverData.session) {
         await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
+          access_token: serverData.session.access_token,
+          refresh_token: serverData.session.refresh_token,
         });
-        document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `sb-access-token=${serverData.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
       }
 
-      const targetRoute = data.user?.role === 'caregiver' ? '/caregiver' : '/dashboard';
+      const targetRoute = serverData.user?.role === 'caregiver' ? '/caregiver' : '/dashboard';
       router.push(targetRoute);
       router.refresh();
-    } catch (err: any) {
-      // 3. Fallback to direct client call if server API is somehow unreachable
-      try {
-        const { data: fallbackData, error: fallbackError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (fallbackError) throw fallbackError;
-        if (fallbackData?.session) {
-          document.cookie = `sb-access-token=${fallbackData.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
-        }
-        router.push('/dashboard');
-        router.refresh();
-      } catch (finalErr: any) {
-        setError(err.message || finalErr.message || 'Failed to sign in');
-      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to sign in';
+      setError(
+        msg.includes('fetch failed')
+          ? 'Network connectivity issue. Please check your connection and retry.'
+          : msg
+      );
     } finally {
       setLoading(false);
     }
@@ -107,7 +134,21 @@ export default function SignInPage() {
     setError('');
     setQuickLoginRole(roleTag);
     try {
-      // 1. Authenticate via resilient server route (immune to browser ad-blockers & CORS)
+      // 1. Direct browser client sign-in with pre-seeded demo credentials
+      const { data: clientData, error: clientError } =
+        await supabase.auth.signInWithPassword({
+          email: demoEmail,
+          password: 'Password123!Secure',
+        });
+
+      if (!clientError && clientData?.session) {
+        document.cookie = `sb-access-token=${clientData.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
+        router.push(targetRoute);
+        router.refresh();
+        return;
+      }
+
+      // 2. Resilient server route fallback
       const res = await fetch('/api/auth/signin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -117,39 +158,30 @@ export default function SignInPage() {
         }),
       });
 
-      const data = await res.json();
-
+      const serverData = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to sign in');
+        throw new Error(
+          serverData.error || clientError?.message || 'Failed to sign in with demo account'
+        );
       }
 
-      // 2. Synchronize session with browser Supabase client
-      if (data.session) {
+      if (serverData.session) {
         await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
+          access_token: serverData.session.access_token,
+          refresh_token: serverData.session.refresh_token,
         });
-        document.cookie = `sb-access-token=${data.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `sb-access-token=${serverData.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
       }
 
       router.push(targetRoute);
       router.refresh();
-    } catch (err: any) {
-      // 3. Fallback to direct client authentication
-      try {
-        const { data: fallbackData, error: fallbackError } = await supabase.auth.signInWithPassword({
-          email: demoEmail,
-          password: 'Password123!Secure',
-        });
-        if (fallbackError) throw fallbackError;
-        if (fallbackData?.session) {
-          document.cookie = `sb-access-token=${fallbackData.session.access_token}; path=/; max-age=604800; SameSite=Lax`;
-        }
-        router.push(targetRoute);
-        router.refresh();
-      } catch (finalErr: any) {
-        setError(err.message || finalErr.message || 'Failed to sign in with demo account');
-      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to sign in with demo account';
+      setError(
+        msg.includes('fetch failed')
+          ? 'Network connectivity issue. Please click "Load Demo Data" above to re-sync or retry in a moment.'
+          : msg
+      );
     } finally {
       setQuickLoginRole(null);
     }
@@ -201,10 +233,22 @@ export default function SignInPage() {
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
               ⚡ Instant 1-Click Demo Logins
             </span>
-            <span className="text-[11px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-              Pre-seeded
-            </span>
+            <button
+              type="button"
+              onClick={handleLoadDemoData}
+              disabled={seedLoading}
+              className="text-[11px] font-bold text-primary-800 bg-primary-100 hover:bg-primary-200 border border-primary-300 px-2.5 py-1 rounded-full transition flex items-center gap-1 shadow-xs"
+              title="Populates Eleanor, Marcus, Dr. Patel, Prescriptions, Appointments, and CARE-2026 Passcode"
+            >
+              {seedLoading ? '⏳ Seeding...' : '🌱 Load Demo Data'}
+            </button>
           </div>
+          {seedSuccess && (
+            <div className="mb-3 p-2.5 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+              <span>✅</span>
+              <span>{seedSuccess}</span>
+            </div>
+          )}
           <p className="text-xs text-slate-600 mb-4 leading-relaxed">
             Select a verified persona to test the platform with full pre-seeded prescriptions, adherence history, care circles, and appointment data:
           </p>

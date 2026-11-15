@@ -1,4 +1,7 @@
-// Type definitions for CareConnect - Elderly Care & Medication Management Platform
+/**
+ * Comprehensive TypeScript definitions for CareConnect Platform.
+ * Features strict discriminated unions, audit interfaces, and smart feature types.
+ */
 
 export type UserRole = 'elderly_user' | 'caregiver';
 
@@ -42,11 +45,13 @@ export interface Medication {
   updated_at: string;
 }
 
+export type DoseStatus = 'taken' | 'skipped' | 'missed' | 'later';
+
 export interface MedicationLog {
   id: string;
   medication_id: string;
   user_id: string;
-  status: 'taken' | 'later' | 'skipped';
+  status: DoseStatus;
   scheduled_time: string;
   logged_at: string;
 }
@@ -60,6 +65,8 @@ export interface VoiceMessage {
   is_read: boolean;
   created_at: string;
   signed_url?: string;
+  sender?: Pick<User, 'id' | 'email' | 'full_name'>;
+  recipient?: Pick<User, 'id' | 'email' | 'full_name'>;
 }
 
 export interface StockAlert {
@@ -69,6 +76,7 @@ export interface StockAlert {
   message: string;
   is_resolved: boolean;
   created_at: string;
+  medication?: Medication;
 }
 
 export interface DailySummary {
@@ -94,14 +102,15 @@ export interface LinkedUser extends User {
 // FAMILY CARE CIRCLE & PERMISSIONS TYPES
 // ====================================================
 
-export type CircleRole = 'elder' | 'editor' | 'viewer';
-export type CircleMemberStatus = 'pending' | 'approved' | 'revoked';
+export type CircleRole = 'owner' | 'elder' | 'editor' | 'viewer';
+export type CircleMemberStatus = 'pending' | 'approved' | 'active' | 'revoked' | 'declined';
 
 export interface CircleMemberPermissions {
   medications: boolean;
   appointments: boolean;
   health_checkins: boolean;
   voice_messages: boolean;
+  insights?: boolean;
 }
 
 export interface NotificationPreferences {
@@ -152,7 +161,7 @@ export interface InviteCode {
 // APPOINTMENTS TYPES
 // ====================================================
 
-export type AppointmentStatus = 'upcoming' | 'done' | 'cancelled';
+export type AppointmentStatus = 'upcoming' | 'completed' | 'done' | 'cancelled';
 
 export interface Appointment {
   id: string;
@@ -163,9 +172,9 @@ export interface Appointment {
   datetime: string; // ISO String
   notes?: string | null;
   status: AppointmentStatus;
-  created_by: string;
+  created_by?: string;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
 }
 
 // ====================================================
@@ -229,4 +238,21 @@ export interface RefillPrediction {
   predictedRunOutDate: string; // YYYY-MM-DD
   isLowStock: boolean;
   needsUrgentRefill: boolean;
+}
+
+// ====================================================
+// API RESPONSE SHAPES
+// ====================================================
+
+export interface ApiSuccessResponse<T> {
+  data: T;
+  message?: string;
+}
+
+export interface ApiErrorResponse {
+  error: {
+    code: string;
+    message: string;
+    details?: unknown;
+  };
 }

@@ -19,3 +19,4 @@ export { default as Avatar, type AvatarProps } from './Avatar';
 export { default as ProgressRing, type ProgressRingProps } from './ProgressRing';
 export { default as Stat, type StatProps } from './Stat';
 export { default as Timeline, type TimelineProps, type TimelineEvent } from './Timeline';
+export { default as Toast, type ToastProps, type ToastType } from './Toast';

@@ -2,17 +2,63 @@
 
 > A smart, accessible, and collaborative healthcare platform empowering elderly individuals, caretakers, and family circles to seamlessly manage medication schedules, proactive dose reminders, and doctor appointments through secure passcode-based access.
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-careconnectcatalyst.netlify.app-0d9488?style=for-the-badge&logo=netlify)](https://careconnectcatalyst.netlify.app/)
 [![CI](https://github.com/Niswan028/catalyst/actions/workflows/ci.yml/badge.svg)](https://github.com/Niswan028/catalyst/actions/workflows/ci.yml)
 [![WCAG 2.1 AA](https://img.shields.io/badge/Accessibility-WCAG%202.1%20AA%20Compliant-brightgreen)](https://www.w3.org/WAI/WCAG21/AA/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
 [![Next.js](https://img.shields.io/badge/Next.js-14.2%20App%20Router-black)](https://nextjs.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+**🚀 Live Production Deployment**: [https://careconnectcatalyst.netlify.app/](https://careconnectcatalyst.netlify.app/)  
+**🏆 Round 2 Judge Evaluation Tour**: [https://careconnectcatalyst.netlify.app/demo](https://careconnectcatalyst.netlify.app/demo) (1-Click Instant Demo Profiles with pre-seeded Prescriptions, Appointments, and `CARE-2026` Passcode)
+
 ---
 
 ## 📋 Table of Contents
+- [Requirement-to-Feature Mapping Table](#-requirement-to-feature-mapping-table)
 - [Problem Statement & Alignment](#-problem-statement--alignment)
+- [Visible Differentiators](#-visible-differentiators-beyond-a-basic-reminder-app)
 - [Judging Criteria Optimization](#-judging-criteria-optimization)
+- [Architecture & Workflow](#-architecture--workflow)
+- [Key Features](#-key-features)
+- [Quickstart & Setup](#-quickstart--setup)
+- [Environment Variables](#-environment-variables)
+- [Testing & Quality Assurance](#-testing--quality-assurance)
+- [Security & Privacy Model](#-security--privacy-model)
+- [Acknowledgements & Attribution](#-acknowledgements--attribution)
+
+---
+
+## 🗺️ Requirement-to-Feature Mapping Table
+
+Every sentence and core requirement from the Catalyst Round 2 Problem Statement is mapped below to its working feature in the live platform:
+
+| Problem Statement Sentence / Requirement | Platform Feature Implementation | Where to Verify in the Live App |
+| :--- | :--- | :--- |
+| **"A smart, interconnected platform where elderly people, caretakers and family manage..."** | Multi-persona Family Care Circles with granular role enforcement (`elder` owner, `editor`, `viewer`). Seamless synchronization across personas in real-time. | [`/dashboard`](https://careconnectcatalyst.netlify.app/dashboard) (Family Circle modal), [`/caregiver`](https://careconnectcatalyst.netlify.app/caregiver) hub, [`/settings`](https://careconnectcatalyst.netlify.app/settings). |
+| **"...the elder's medications..."** | Prescription schedule management: flexible daily schedules, dosages, stock tracking, and refill threshold monitoring with edit & delete support. | [`/medications`](https://careconnectcatalyst.netlify.app/medications) page, [`/dashboard`](https://careconnectcatalyst.netlify.app/dashboard) (Schedule Timeline & Next Dose card). |
+| **"...adherence..."** | Dose logging (`taken`, `skipped`, `missed`), 7-day adherence trend charts, streak counter, time-slot heatmap, and resilient "No data yet" state when doses are unlogged. | [`/dashboard`](https://careconnectcatalyst.netlify.app/dashboard) (Adherence Insights card & KPI bar), [`/caregiver`](https://careconnectcatalyst.netlify.app/caregiver) (Adherence tab). |
+| **"...and doctor appointments..."** | Full clinical visits CRUD (specialty, clinic address, prep notes), completion tracking, and 1-click RFC 5545 `.ics` export with calendar reminders. | [`/appointments`](https://careconnectcatalyst.netlify.app/appointments) page, [`/dashboard`](https://careconnectcatalyst.netlify.app/dashboard) (Upcoming Appointments widget). |
+| **"...through secure passcode-based access,"** | Expiring, bcrypt-salted invite passcodes (e.g., `CARE-2026`) with prefix indexing, dual-axis rate limiting (user + IP lockout), and elder approval gate. | [`/dashboard`](https://careconnectcatalyst.netlify.app/dashboard) (Family Circle modal -> Invite tab), [`/caregiver`](https://careconnectcatalyst.netlify.app/caregiver) ("Join with Passcode" modal). |
+| **"...with proactive EMAIL reminders for upcoming doses,"** | Automated email dispatch 15–30 minutes before scheduled medication times via SMTP/Nodemailer with dev-mock fallback. | Trigger live via **"Test Reminders"** modal on [`/dashboard`](https://careconnectcatalyst.netlify.app/dashboard) and [`/demo`](https://careconnectcatalyst.netlify.app/demo). |
+| **"...missed medications (with escalation to family),"** | 2-stage escalation chain: +15m overdue notice sent to elder & caregiver; +60m urgent escalation dispatched to all family members in circle. | Trigger live via **"Test Reminders"** modal (choose `missed_dose_15m` or `missed_dose_60m`). |
+| **"...and appointments."** | Proactive 24-hour and 2-hour email reminders with clinic location and physician notes embedded. | Trigger live via **"Test Reminders"** modal (choose `appointment_24h` or `appointment_2h`). |
+| **"It must go beyond a basic reminder app..."** | Visible differentiators: rule-based adherence pattern detector with schedule suggestions, days-to-depletion refill forecasting, weekly family digest, and tamper-evident circle audit trail. | [`/dashboard`](https://careconnectcatalyst.netlify.app/dashboard) (Insights & Refill cards), [`/audit`](https://careconnectcatalyst.netlify.app/audit) (Care Circle Audit Trail), [`/settings`](https://careconnectcatalyst.netlify.app/settings). |
+| **"...and keep the elder at the centre of their own healthcare decisions."** | Elder-first "Easy Mode" (32px typography, 48px buttons, automated speech synthesis announcements), elder-controlled granular privacy sharing permissions, and sovereign approval/revocation of all circle members. | [`/dashboard`](https://careconnectcatalyst.netlify.app/dashboard) (Easy Mode toggle), [`/settings`](https://careconnectcatalyst.netlify.app/settings) (Elder Privacy Controls), [`/dashboard`](https://careconnectcatalyst.netlify.app/dashboard) (Circle Members tab). |
+
+---
+
+## 🚀 Visible Differentiators: Beyond a Basic Reminder App
+
+CareConnect does not treat the senior as a passive object. We built 6 tangible differentiators that elevate it beyond a simple alarm clock:
+1. **Elder-Controlled Sovereignty & Approval Gates**: Unlike apps where any relative can inspect the elder, in CareConnect new members land in "pending" status until the elder explicitly approves them. The elder can revoke access or toggle off sharing for specific categories (e.g. check-in transcripts or visit notes) at any time.
+2. **Multi-Tier Missed-Dose Escalation Chain**: When a dose is missed, CareConnect doesn't just buzz a silent phone. It sends a gentle +15m reminder to the elder and primary caregiver, and escalates to an urgent +60m notification to all editors and viewers across the family circle.
+3. **Rule-Based Adherence Pattern Detector**: Analyzes historical logging patterns to highlight consistently missed time slots (e.g. "Afternoon doses frequently missed") and offers actionable lifestyle suggestions (e.g. "Pair with lunch or set a reminder alarm") paired with a prominent *Not medical advice* legal disclaimer.
+4. **Days-to-Depletion Refill Forecasting**: Continuously projects remaining supply based on daily dosage schedules, triggering low-stock warnings when inventory drops below safety thresholds before medications run out.
+5. **Weekly Family Health Digest**: Consolidates 7-day adherence percentages, completed doctor appointments, and refill alerts into an automated summary email for working relatives.
+6. **Immutable Care Circle Audit Trail**: Every passcode generation, invite redemption, permission update, and dose schedule change is permanently logged in `audit_log`, inspectable on [`/audit`](https://careconnectcatalyst.netlify.app/audit).
+
+---
 - [Architecture & Workflow](#-architecture--workflow)
 - [Key Features](#-key-features)
 - [Quickstart & Setup](#-quickstart--setup)
@@ -48,7 +94,7 @@ CareConnect bridges the gap between elderly autonomy and family peace of mind. B
 | **Code Quality** | Next.js 14 App Router, modular services (`lib/email`, `lib/passcode.ts`, `lib/adherence.ts`), zero TypeScript `any` types, centralized constants (`lib/constants.ts`). | `npm run lint` (0 errors, 0 warnings), `npx tsc --noEmit` (100% type-safe). |
 | **Security** | Zero raw passcodes stored (bcrypt salted rounds=10, rate-limiting lockout after 5 fails / 15 min), private storage bucket with 15-minute presigned URLs, strict CSP & HTTP security headers, Zod schema validation across all endpoints. | `supabase/01` & `02` RLS policies, `__tests__/rls.test.ts`, `__tests__/rateLimit.test.ts`. |
 | **Efficiency** | Composite B-tree indexes for all frequent queries (`supabase/03-indexes-and-optimizations.sql`), deterministic idempotency keys eliminating duplicate emails, sub-millisecond in-memory cache/rate-limiting. | All 89 tests complete in <4 seconds; 100% idempotent cron execution. |
-| **Testing** | 89 Vitest unit & integration tests covering bcrypt hashing, reminder escalation, refill prediction, adherence analytics, Zod schemas, live Supabase verification, and RLS cross-circle isolation. Playwright E2E suites with mobile viewports. | **85%+ coverage** on core logic (`lib/`), 100% test pass rate across 14 suites, GitHub Actions CI workflow. |
+| **Testing** | 120 Vitest unit & integration tests covering bcrypt hashing, reminder escalation, refill prediction, adherence analytics, Zod schemas, live Supabase verification, axe-core WCAG audits, and RLS cross-circle isolation. Playwright E2E suites with mobile viewports. | **85%+ coverage** on core logic (`lib/`), 100% test pass rate across 18 suites, GitHub Actions CI workflow. |
 | **Accessibility** | Built strictly to **WCAG 2.1 AA** standards: skip-link navigation, 3px focus rings, `prefers-reduced-motion` compliance, text alternative mode for voice check-in, 4.5:1+ contrast ratios, Easy Mode with 32px-48px typography, multi-language support (English, Hindi, Tamil). | Automated `axe-core` accessibility audit suite passing with **0 violations**. |
 | **Problem Alignment** | Elder-first design: elder approves all caregiver additions, controls granular permissions per member, and can operate independently via "Easy Mode". | Full end-to-end circle invite, doctor appointment, and proactive email escalation demonstrable. |
 

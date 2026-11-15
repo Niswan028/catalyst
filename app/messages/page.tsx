@@ -160,7 +160,6 @@ export default function MessagesPage() {
       // Use the blob's actual type for the file extension
       const fileExtension = recordedAudio.blob.type.includes('ogg') ? 'ogg' : 
                            recordedAudio.blob.type.includes('mp4') ? 'mp4' : 'webm';
-      console.log('Uploading audio with type:', recordedAudio.blob.type, 'extension:', fileExtension);
       formData.append('audio', recordedAudio.blob, `voice-message.${fileExtension}`);
       formData.append('recipient_id', selectedRecipient);
       formData.append('duration_seconds', recordedAudio.duration.toString());
@@ -369,15 +368,8 @@ export default function MessagesPage() {
                         handleMarkAsRead(message.id);
                       }
                     }}
-                    onError={(e) => {
-                      console.error('Audio playback error:', e);
-                      console.error('Audio URL:', message.audio_url);
-                      const target = e.target as HTMLAudioElement;
-                      console.error('Error code:', target.error?.code);
-                      console.error('Error message:', target.error?.message);
-                    }}
-                    onLoadedMetadata={() => {
-                      console.log('Audio loaded successfully:', message.audio_url);
+                    onError={() => {
+                      setError('Failed to play audio message.');
                     }}
                   />
 

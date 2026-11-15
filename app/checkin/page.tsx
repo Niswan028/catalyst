@@ -7,8 +7,11 @@ import { supabase } from '@/lib/supabase/client';
 import { useSpeechRecognition } from '@/hooks/useSpeechRecognition';
 import { useSpeechSynthesis } from '@/hooks/useSpeechSynthesis';
 import Card from '@/components/Card';
-import Button from '@/components/Button';
-import LoadingSpinner from '@/components/LoadingSpinner';
+import { logger } from '@/lib/logger';
+import CheckInHistoryCard from '@/components/checkin/CheckInHistoryCard';
+import VoiceCheckInView from '@/components/checkin/VoiceCheckInView';
+import TextCheckInView from '@/components/checkin/TextCheckInView';
+import CheckInCompleteCard from '@/components/checkin/CheckInCompleteCard';
 
 export default function CheckInPage() {
   const router = useRouter();
@@ -21,17 +24,15 @@ export default function CheckInPage() {
   const { speak, isSpeaking, isSupported: ttsSupported } = useSpeechSynthesis();
 
   const {
-    isListening,
     transcript: liveTranscript,
-    isSupported: asrSupported,
     startListening,
     stopListening,
   } = useSpeechRecognition({
     onResult: (finalTranscript) => {
       setTranscript((prev) => (prev ? prev + ' ' + finalTranscript : finalTranscript));
     },
-    onError: (error) => {
-      setError(`Speech recognition note: ${error}. You can also type your check-in below.`);
+    onError: (recError) => {
+      setError(`Speech recognition note: ${recError}. You can also type your check-in below.`);
       setStep('ready');
     },
   });
@@ -46,16 +47,13 @@ export default function CheckInPage() {
         .limit(5);
       if (data) setPastCheckins(data);
     } catch (err) {
-      console.error('Failed to load past check-ins:', err);
+      logger.error('Failed to load past check-ins', { error: err });
     }
   };
 
   useEffect(() => {
-    // Check authentication
     const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         router.push('/auth/signin');
       } else {
@@ -70,12 +68,10 @@ export default function CheckInPage() {
     setError('');
     setStep('listening');
 
-    // Speak the greeting
     if (ttsSupported) {
       speak('Hello, how are you feeling today?');
     }
 
-    // Start listening after speech finishes
     setTimeout(() => {
       startListening();
     }, 2500);
@@ -95,9 +91,7 @@ export default function CheckInPage() {
 
   const submitCheckIn = async (textToSubmit: string) => {
     try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
 
       if (!session) {
         setError('Session expired. Please sign in again.');
@@ -133,7 +127,7 @@ export default function CheckInPage() {
           body: JSON.stringify({ user_id: session.user.id }),
         });
       } catch (sumErr) {
-        console.error('Summary generation non-critical error:', sumErr);
+        logger.error('Summary generation non-critical error', { error: sumErr });
       }
 
       if (ttsSupported) {
@@ -156,28 +150,7 @@ export default function CheckInPage() {
   };
 
   if (step === 'complete') {
-    return (
-      <main className="max-w-2xl mx-auto py-8">
-        <Card className="text-center p-8">
-          <div className="text-6xl mb-4" role="img" aria-label="Celebration">
-            ✅
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Check-In Recorded!</h1>
-          <p className="text-gray-600 mb-6 text-lg">
-            Thank you for sharing how you feel. Your daily health summary has been updated for you
-            and your care circle.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Button onClick={() => router.push('/dashboard')} variant="primary" size="lg">
-              Return to Dashboard
-            </Button>
-            <Button onClick={() => setStep('ready')} variant="secondary">
-              Record Another
-            </Button>
-          </div>
-        </Card>
-      </main>
-    );
+    return <CheckInCompleteCard onRecordAnother={() => setStep('ready')} />;
   }
 
   return (
@@ -233,184 +206,28 @@ export default function CheckInPage() {
           </div>
         )}
 
-        {/* VOICE MODE */}
         {mode === 'voice' && (
-          <section aria-labelledby="voice-checkin-heading">
-            <h2 id="voice-checkin-heading" className="sr-only">Voice Check-In</h2>
-
-            {step === 'ready' && (
-              <div className="text-center py-8">
-                <div className="text-6xl mb-4" role="img" aria-label="Microphone">
-                  🎤
-                </div>
-                <p className="text-gray-700 mb-6 text-lg">
-                  Tap the button to start. The app will greet you and record your response.
-                </p>
-                <Button onClick={handleStartCheckIn} size="lg" className="px-8 py-3 text-lg">
-                  Start Voice Check-In
-                </Button>
-              </div>
-            )}
-
-            {step === 'listening' && (
-              <div className="text-center py-8">
-                <div className="text-6xl mb-4 animate-pulse text-red-600" role="img" aria-label="Recording">
-                  🔴
-                </div>
-                {isSpeaking ? (
-                  <p className="text-xl text-primary-700 font-bold mb-4">
-                    🔊 &quot;Hello, how are you feeling today?&quot;
-                  </p>
-                ) : (
-                  <>
-                    <p className="text-xl text-red-700 font-bold mb-2">
-                      Listening... Speak now!
-                    </p>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Mention your mood, symptoms, aches, appetite, or how you slept.
-                    </p>
-                  </>
-                )}
-
-                {(transcript || liveTranscript) && (
-                  <div
-                    className="bg-gray-50 border border-gray-200 p-4 rounded-xl mb-6 text-left"
-                    aria-live="polite"
-                  >
-                    <p className="text-xs uppercase font-bold text-gray-500 mb-1">
-                      Captured Transcript:
-                    </p>
-                    <p className="text-gray-900 font-medium text-base">
-                      {transcript + ' ' + liveTranscript}
-                    </p>
-                  </div>
-                )}
-
-                <Button
-                  onClick={handleStopListening}
-                  variant="danger"
-                  size="lg"
-                  className="px-8 py-3 text-lg font-bold"
-                >
-                  ⏹️ Stop & Submit Check-In
-                </Button>
-              </div>
-            )}
-
-            {step === 'processing' && (
-              <div className="text-center py-12">
-                <LoadingSpinner size="lg" />
-                <p className="text-gray-700 mt-4 text-lg font-semibold">
-                  Analyzing health keywords and saving your summary...
-                </p>
-              </div>
-            )}
-          </section>
+          <VoiceCheckInView
+            step={step}
+            isSpeaking={isSpeaking}
+            transcript={transcript}
+            liveTranscript={liveTranscript}
+            onStartCheckIn={handleStartCheckIn}
+            onStopListening={handleStopListening}
+          />
         )}
 
-        {/* TEXT ALTERNATIVE MODE (WCAG 2.1 AA) */}
         {mode === 'text' && (
-          <section aria-labelledby="text-checkin-heading">
-            <h2 id="text-checkin-heading" className="text-xl font-bold text-gray-800 mb-2">
-              Write Your Daily Health Note
-            </h2>
-            <p className="text-sm text-gray-600 mb-4">
-              Type how you are feeling today. Mention your sleep, energy, aches, or general mood.
-            </p>
-
-            <form onSubmit={handleManualSubmit} className="space-y-4">
-              <div>
-                <label htmlFor="manual-health-text" className="sr-only">
-                  Daily Health Check-In Text
-                </label>
-                <textarea
-                  id="manual-health-text"
-                  value={manualText}
-                  onChange={(e) => setManualText(e.target.value)}
-                  rows={5}
-                  placeholder="e.g. I slept well last night and had a healthy breakfast. Feeling good today with no knee pain."
-                  className="w-full p-4 border-2 border-gray-300 rounded-xl focus:border-primary-600 focus:ring-4 focus:ring-primary-100 outline-none text-base text-gray-900"
-                  required
-                />
-              </div>
-
-              <div className="flex justify-end gap-3">
-                <Button
-                  type="submit"
-                  variant="primary"
-                  size="lg"
-                  disabled={step === 'processing' || !manualText.trim()}
-                  className="px-8"
-                >
-                  {step === 'processing' ? 'Submitting...' : 'Submit Health Check-In'}
-                </Button>
-              </div>
-            </form>
-          </section>
+          <TextCheckInView
+            manualText={manualText}
+            setManualText={setManualText}
+            isProcessing={step === 'processing'}
+            onSubmit={handleManualSubmit}
+          />
         )}
       </Card>
 
-      {/* Past Health Check-Ins */}
-      {pastCheckins.length > 0 && (
-        <Card className="p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-extrabold text-slate-900 flex items-center gap-2">
-              <span>📋</span> Recent Health Check-Ins
-            </h2>
-            <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
-              {pastCheckins.length} recorded
-            </span>
-          </div>
-
-          <div className="space-y-3.5">
-            {pastCheckins.map((item) => (
-              <div
-                key={item.id}
-                className="p-4 rounded-xl bg-slate-50 border border-slate-200/80 hover:bg-slate-100/60 transition"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-slate-500">
-                    {new Date(item.created_at).toLocaleDateString(undefined, {
-                      month: 'short',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
-                  <span
-                    className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-full capitalize ${
-                      item.mood === 'good' || item.mood === 'positive'
-                        ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                        : item.mood === 'neutral'
-                        ? 'bg-blue-100 text-blue-800 border border-blue-300'
-                        : 'bg-amber-100 text-amber-800 border border-amber-300'
-                    }`}
-                  >
-                    Mood: {item.mood || 'Normal'}
-                  </span>
-                </div>
-
-                <p className="text-sm font-medium text-slate-800 leading-relaxed mb-2.5">
-                  &ldquo;{item.transcript}&rdquo;
-                </p>
-
-                {item.detected_keywords && item.detected_keywords.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {item.detected_keywords.map((kw: string, idx: number) => (
-                      <span
-                        key={idx}
-                        className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600 uppercase tracking-wider"
-                      >
-                        #{kw}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
+      <CheckInHistoryCard pastCheckins={pastCheckins} />
     </main>
   );
 }

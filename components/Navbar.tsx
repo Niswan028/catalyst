@@ -65,11 +65,15 @@ export default function Navbar() {
           { href: '/medications', label: t.nav.medications, icon: '💊' },
           { href: '/appointments', label: t.nav.appointments, icon: '🗓️' },
           { href: '/messages', label: t.nav.messages, icon: '💬' },
+          { href: '/demo', label: t.nav.tour, icon: '🏆' },
+          { href: '/settings', label: t.nav.settings, icon: '⚙️' },
         ]
       : [
           { href: '/caregiver', label: t.nav.dashboard, icon: '🏠' },
           { href: '/appointments', label: t.nav.appointments, icon: '🗓️' },
           { href: '/messages', label: t.nav.messages, icon: '💬' },
+          { href: '/demo', label: t.nav.tour, icon: '🏆' },
+          { href: '/settings', label: t.nav.settings, icon: '⚙️' },
         ];
 
   return (

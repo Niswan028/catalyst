@@ -1,4 +1,4 @@
-// Sign up page
+// Sign up page with Elder, Caregiver, and Family role selection and instant validation
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,13 +9,15 @@ import Button from '@/components/Button';
 import Input from '@/components/Input';
 import Card from '@/components/Card';
 
+type UserPersona = 'elder' | 'caregiver' | 'family';
+
 export default function SignUpPage() {
   const router = useRouter();
+  const [persona, setPersona] = useState<UserPersona>('elder');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     full_name: '',
-    role: 'elderly_user' as 'elderly_user' | 'caregiver',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,18 +25,20 @@ export default function SignUpPage() {
   // Check if user is already authenticated
   useEffect(() => {
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (session) {
-        // User is already signed in, redirect to dashboard
         router.push('/dashboard');
       }
     };
 
     checkAuth();
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session) {
         router.push('/dashboard');
       }
@@ -45,16 +49,45 @@ export default function SignUpPage() {
     };
   }, [router]);
 
+  const validateForm = () => {
+    if (!formData.full_name.trim() || formData.full_name.trim().length < 2) {
+      return 'Please enter your full name (at least 2 characters).';
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email.trim())) {
+      return 'Please enter a valid email address (e.g., name@example.com).';
+    }
+    if (formData.password.length < 6) {
+      return 'Password must be at least 6 characters long.';
+    }
+    return null;
+  };
+
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    const validationError = validateForm();
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+
     setLoading(true);
+
+    // Map UI persona to database role
+    const dbRole: 'elderly_user' | 'caregiver' =
+      persona === 'elder' ? 'elderly_user' : 'caregiver';
 
     try {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          email: formData.email.trim(),
+          role: dbRole,
+        }),
       });
 
       const data = await response.json();
@@ -63,10 +96,14 @@ export default function SignUpPage() {
         throw new Error(data.error || 'Failed to sign up');
       }
 
-      // Redirect to sign in
-      router.push('/auth/signin?message=Account created successfully. Please sign in.');
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign up');
+      // If elder, suggest onboarding; otherwise route to signin
+      const welcomeMsg = encodeURIComponent(
+        `Welcome to CareConnect! Your ${persona} account has been created. Please sign in.`
+      );
+      router.push(`/auth/signin?message=${welcomeMsg}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to sign up';
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -76,83 +113,199 @@ export default function SignUpPage() {
     setError('');
     setLoading(true);
 
+    const dbRole = persona === 'elder' ? 'elderly_user' : 'caregiver';
+
     try {
-      // Store role in multiple places to ensure it persists
-      sessionStorage.setItem('pending_role', formData.role);
-      localStorage.setItem('pending_role', formData.role);
-      
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      sessionStorage.setItem('pending_role', dbRole);
+      localStorage.setItem('pending_role', dbRole);
+
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback?role=${formData.role}`,
+          redirectTo: `${window.location.origin}/auth/callback?role=${dbRole}`,
           queryParams: {
-            prompt: 'select_account', // Always show account chooser
+            prompt: 'select_account',
           },
         },
       });
 
-      if (error) throw error;
-      
-      // OAuth will redirect, so we don't need to do anything here
-    } catch (error: any) {
-      setError(error.message || 'Failed to sign up with Google');
+      if (oauthError) throw oauthError;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to sign up with Google';
+      setError(msg);
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-primary-700 mb-2">CareConnect</h1>
-          <p className="text-gray-600">Healthcare Voice Assistant</p>
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-slate-50 to-teal-50 flex items-center justify-center px-4 py-12">
+      <div className="max-w-md w-full space-y-6">
+        <div className="text-center">
+          <Link href="/" className="inline-flex items-center gap-2 mb-3">
+            <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-primary-700 to-teal-600 text-white flex items-center justify-center font-black text-2xl shadow-md">
+              C+
+            </div>
+            <span className="text-3xl font-black text-slate-900 tracking-tight">
+              Care<span className="text-primary-600">Connect</span>
+            </span>
+          </Link>
+          <p className="text-sm font-medium text-slate-600">
+            Create your account to start managing care & medication schedules
+          </p>
         </div>
 
         <Card>
-          <h2 className="text-2xl font-semibold mb-6 text-center">Create Account</h2>
+          <h2 className="text-xl font-bold mb-4 text-slate-900 text-center">
+            Create Your Account
+          </h2>
 
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
-              {error}
+            <div
+              className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-4 text-sm font-semibold flex items-center gap-2"
+              role="alert"
+            >
+              <span>🛑</span>
+              <span>{error}</span>
             </div>
           )}
 
-          {/* Role Selection - Always visible */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-3">I am a</label>
-            <div className="space-y-2">
-              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+          {/* Role Selection - 3 Personas */}
+          <div className="mb-5">
+            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2.5">
+              Select Your Role
+            </label>
+            <div className="grid grid-cols-1 gap-2.5" role="radiogroup" aria-label="Account Role">
+              <label
+                className={`flex items-start p-3 border-2 rounded-xl cursor-pointer transition ${
+                  persona === 'elder'
+                    ? 'border-primary-600 bg-primary-50/60 shadow-xs'
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                }`}
+              >
                 <input
                   type="radio"
-                  value="elderly_user"
-                  checked={formData.role === 'elderly_user'}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                  className="mr-3"
+                  name="persona"
+                  value="elder"
+                  checked={persona === 'elder'}
+                  onChange={() => setPersona('elder')}
+                  className="mt-1 mr-3 text-primary-600 focus:ring-primary-500"
                 />
-                <span className="font-medium">Elderly User</span>
+                <div>
+                  <div className="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+                    <span>👵</span> Elder / Senior
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Manage my own medications, doctor appointments, and daily check-ins.
+                  </p>
+                </div>
               </label>
-              <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50">
+
+              <label
+                className={`flex items-start p-3 border-2 rounded-xl cursor-pointer transition ${
+                  persona === 'caregiver'
+                    ? 'border-primary-600 bg-primary-50/60 shadow-xs'
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                }`}
+              >
                 <input
                   type="radio"
+                  name="persona"
                   value="caregiver"
-                  checked={formData.role === 'caregiver'}
-                  onChange={(e) => setFormData({ ...formData, role: e.target.value as any })}
-                  className="mr-3"
+                  checked={persona === 'caregiver'}
+                  onChange={() => setPersona('caregiver')}
+                  className="mt-1 mr-3 text-primary-600 focus:ring-primary-500"
                 />
-                <span className="font-medium">Caregiver</span>
+                <div>
+                  <div className="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+                    <span>🩺</span> Caregiver / Clinician
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Doctor, nurse, or professional aide overseeing clinical care.
+                  </p>
+                </div>
+              </label>
+
+              <label
+                className={`flex items-start p-3 border-2 rounded-xl cursor-pointer transition ${
+                  persona === 'family'
+                    ? 'border-primary-600 bg-primary-50/60 shadow-xs'
+                    : 'border-slate-200 hover:border-slate-300 bg-white'
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="persona"
+                  value="family"
+                  checked={persona === 'family'}
+                  onChange={() => setPersona('family')}
+                  className="mt-1 mr-3 text-primary-600 focus:ring-primary-500"
+                />
+                <div>
+                  <div className="font-extrabold text-sm text-slate-900 flex items-center gap-1.5">
+                    <span>👨‍👩‍👧</span> Family Member
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Son, daughter, or spouse joining via passcode to stay informed.
+                  </p>
+                </div>
               </label>
             </div>
           </div>
 
+          {/* Email/Password Form */}
+          <form onSubmit={handleSignUp} className="space-y-3.5">
+            <Input
+              label="Full Name"
+              type="text"
+              value={formData.full_name}
+              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+              placeholder="Eleanor Vance"
+              required
+            />
+
+            <Input
+              label="Email Address"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              placeholder="eleanor@example.com"
+              required
+            />
+
+            <Input
+              label="Password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              placeholder="At least 6 characters"
+              required
+            />
+
+            <Button type="submit" className="w-full py-3 font-extrabold mt-2" disabled={loading}>
+              {loading ? 'Creating account...' : `Sign Up as ${persona === 'elder' ? 'Elder' : persona === 'caregiver' ? 'Caregiver' : 'Family Member'}`}
+            </Button>
+          </form>
+
           {/* Google Sign Up */}
+          <div className="relative my-5">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200"></div>
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="px-2 bg-white text-slate-400 font-semibold uppercase tracking-wider">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
           <Button
             type="button"
             onClick={handleGoogleSignUp}
             variant="secondary"
-            className="w-full flex items-center justify-center gap-3 mb-6"
+            className="w-full flex items-center justify-center gap-3 py-2.5 font-bold"
             disabled={loading}
           >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
+            <svg className="w-4 h-4" viewBox="0 0 24 24">
               <path
                 fill="#4285F4"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -170,62 +323,17 @@ export default function SignUpPage() {
                 d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
               />
             </svg>
-            Continue with Google
+            Sign up with Google
           </Button>
 
-          <div className="relative my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or sign up with email</span>
-            </div>
-          </div>
-
-          {/* Email/Password Form */}
-          <form onSubmit={handleSignUp}>
-            <Input
-              label="Full Name"
-              type="text"
-              value={formData.full_name}
-              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              placeholder="John Doe"
-            />
-
-            <Input
-              label="Email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="your@email.com"
-              required
-            />
-
-            <Input
-              label="Password"
-              type="password"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              placeholder="••••••••"
-              required
-            />
-
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Creating account...' : 'Sign Up with Email'}
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              Already have an account?{' '}
-              <Link href="/auth/signin" className="text-primary-600 hover:text-primary-700 font-medium">
-                Sign In
-              </Link>
-            </p>
-          </div>
+          <p className="mt-5 text-center text-xs text-slate-600 font-medium">
+            Already have an account?{' '}
+            <Link href="/auth/signin" className="text-primary-600 hover:text-primary-700 font-bold underline">
+              Sign in
+            </Link>
+          </p>
         </Card>
       </div>
     </div>
   );
 }
-

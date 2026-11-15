@@ -84,6 +84,14 @@ textarea:focus-visible,
   font-weight: 700 !important;
 }
 
+/* User Text Size Scaling */
+.text-size-lg {
+  font-size: 19px !important;
+}
+.text-size-xl {
+  font-size: 21px !important;
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

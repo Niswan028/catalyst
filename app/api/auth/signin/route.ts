@@ -95,7 +95,13 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Internal server error';
+    console.error('[/api/auth/signin] Error:', error);
+    const message =
+      error instanceof Error
+        ? error.message.includes('fetch failed')
+          ? 'Unable to connect to authentication server. Please retry in a moment.'
+          : error.message
+        : 'Internal server error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

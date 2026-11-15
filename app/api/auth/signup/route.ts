@@ -99,7 +99,13 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    const message = error instanceof Error ? error.message : 'Internal server error';
+    console.error('[/api/auth/signup] Error:', error);
+    const message =
+      error instanceof Error
+        ? error.message.includes('fetch failed')
+          ? 'Unable to connect to database. Please retry in a few moments.'
+          : error.message
+        : 'Internal server error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

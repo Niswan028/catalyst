@@ -22,7 +22,7 @@ export function calculateAdherenceMetrics(
   totalMissedWeek: number;
 } {
   const activeMeds = medications.filter((m) => m.is_active);
-  if (activeMeds.length === 0) {
+  if (activeMeds.length === 0 || logs.length === 0) {
     return {
       hasData: false,
       weeklyAdherenceRate: null,

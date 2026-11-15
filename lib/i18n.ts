@@ -13,6 +13,9 @@ export interface Translations {
     messages: string;
     familyCircle: string;
     easyMode: string;
+    tour: string;
+    settings: string;
+    audit: string;
     signOut: string;
   };
   actions: {
@@ -51,6 +54,9 @@ export const translations: Record<SupportedLanguage, Translations> = {
       messages: 'Messages',
       familyCircle: 'Family Care Circle',
       easyMode: 'Easy Mode',
+      tour: 'Tour',
+      settings: 'Settings',
+      audit: 'Audit Log',
       signOut: 'Sign Out',
     },
     actions: {
@@ -87,6 +93,9 @@ export const translations: Record<SupportedLanguage, Translations> = {
       messages: 'संदेश',
       familyCircle: 'परिवार मंडल',
       easyMode: 'सरल मोड',
+      tour: 'टूर',
+      settings: 'सेटिंग्स',
+      audit: 'ऑडिट लॉग',
       signOut: 'साइन आउट',
     },
     actions: {
@@ -123,6 +132,9 @@ export const translations: Record<SupportedLanguage, Translations> = {
       messages: 'செய்திகள்',
       familyCircle: 'குடும்ப வட்டம்',
       easyMode: 'எளிய முறை',
+      tour: 'வழிகாட்டி',
+      settings: 'அமைப்புகள்',
+      audit: 'பதிவு வரலாறு',
       signOut: 'வெளியேறு',
     },
     actions: {
