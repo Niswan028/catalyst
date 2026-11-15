@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
@@ -10,7 +10,7 @@ import { supabase } from '@/lib/supabase/client';
 import { Appointment, AppointmentStatus, User } from '@/lib/types';
 import { format } from 'date-fns';
 
-export default function AppointmentsPage() {
+function AppointmentsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [user, setUser] = useState<User | null>(null);
@@ -463,5 +463,19 @@ export default function AppointmentsPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function AppointmentsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center p-8">
+          <LoadingSpinner size="lg" />
+        </div>
+      }
+    >
+      <AppointmentsContent />
+    </Suspense>
   );
 }

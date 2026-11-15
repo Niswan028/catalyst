@@ -3,6 +3,8 @@ import { getAuthenticatedContext, createServiceRoleClient } from '@/lib/supabase
 import { generateAdherenceInsight } from '@/lib/adherence';
 import { predictAllRefills } from '@/lib/refillPrediction';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     const authResult = await getAuthenticatedContext(request);
